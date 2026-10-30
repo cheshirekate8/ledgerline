@@ -56,7 +56,7 @@ queued messages are processed.
 | `src/shared/` | Clock, id generator, integer money and rounding, allocation, errors, JSON logger |
 | `src/shared/events/` | Event shapes, the event store (memory and JSON file), upcaster registry, sequence tracking |
 | `src/shared/aggregates/`, `src/shared/snapshots/` | Aggregate base class, repository, snapshot policy and store |
-| `src/shared/messaging/` | Queue, retry policy, dead-letter queue, worker pool, event dispatcher |
+| `src/shared/messaging/` | Queue, retry policy, dead-letter queue, worker pool, event dispatcher, durable subscriber progress |
 | `src/shared/commands/`, `src/shared/projections/` | Idempotent command bus, projection host |
 | `src/pricing/` | Price list, discount codes, coupons, tax table, order pricing, refund proration |
 | `src/orders/` | Order aggregate and lifecycle, commands, OrderSummary and CustomerHistory, process managers, reservation expiry |
@@ -307,10 +307,42 @@ silently applied. Process managers derive the idempotency key of every command
 they send from the event that caused it. Delivering any event any number of
 times therefore changes state at most once.
 
-`app.republish()` sends every stored event to every subscriber again. After a
-restart over a file-backed store, this finishes any work that was still queued
-when the process stopped: the queue is in memory, and its contents are not
-persisted. Built-in subscribers ignore what they have already handled, so
+**Restart recovery.** The queue itself is in memory, but over a file-backed
+store (`persistence: { kind: 'json-file' }`) each named subscriber's **progress**
+is not: which events it has finished handling, and which ended in the
+dead-letter queue. Progress is written beside the event log, in the same
+directory, so copying or removing that directory takes it along, and `durable`
+decides whether those writes are fsynced just as it does for events.
+
+That is enough to rebuild the queue, because every queued delivery is just "an
+event this subscriber has not finished":
+
+- When a named subscriber is registered — the built-in fulfillment and payment
+  processes inside `createLedgerline`, anything else through `app.subscribe()` —
+  everything it had not finished is queued for it at once, in stream order and
+  ahead of events appended later. No call to `republish()` is needed.
+- Progress is recorded only after a handler succeeds, so delivery stays
+  at-least-once: a delivery in flight or waiting out a retry when the process
+  stopped is delivered again, with a fresh retry budget. Attempt counts are not
+  persisted.
+- Dead letters survive as dead letters. They are listed from the moment the
+  store is opened, keep their message ids, and are never retried on their own;
+  `app.redrive(id)` still puts one back, and a redriven delivery that succeeds
+  counts as finished.
+- A subscriber is known from the moment it is first registered against a store.
+  A name never registered against it starts at the end of the log and receives
+  only events appended afterwards, so opening a log written before progress
+  existed re-runs nothing.
+- Read models resume nothing: they are rebuilt from the full log at start-up.
+  In-memory and custom event stores have nothing to resume from and behave as
+  they always have.
+- Progress that cannot be read — damaged, truncated part-way through its last
+  record, or naming events the log does not hold — makes `createLedgerline`
+  throw an error naming the file, rather than being read as "nothing handled" or
+  "everything handled".
+
+`app.republish()` is unchanged: it sends every stored event to every subscriber
+again. Built-in subscribers ignore what they have already handled, so
 republishing at any time is safe.
 
 ## Persistence, snapshots and event versions
@@ -319,7 +351,9 @@ republishing at any time is safe.
   in-memory store is the default. The JSON file store writes one event per line,
   fsyncs each batch (unless `durable: false`), and on open validates every line
   and the continuity of every stream, reporting the line number of any damage.
-  It never truncates.
+  It never truncates. Beside it, `<log>.progress.ndjson` records each named
+  subscriber's progress for that one log, so two logs in one directory keep
+  separate progress; see [Delivery guarantees](#delivery-guarantees).
 - **Read models** are rebuilt from the full event log at start-up, and on
   demand with `app.rebuildReadModels()`.
 - **Snapshots** are off by default. When enabled, an aggregate's state is saved
