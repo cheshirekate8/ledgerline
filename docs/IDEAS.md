@@ -41,8 +41,6 @@ date. Optional, only when true: `Blocked on:` (a change-log row or issue id) and
 - **Find expiry candidates without loading every order** — `expireReservations()` replays
   every order stream on each sweep, which is fine for a small store and grows with order
   history. 2026-10-29. Related: `src/orders/reservation-expiry-service.ts`.
-- **Bound the idempotency store** — it holds every key forever in memory, and it is rebuilt
-  from the whole event log at start-up. 2026-10-29.
 
 ## Promoted
 
@@ -51,6 +49,7 @@ date. Optional, only when true: `Blocked on:` (a change-log row or issue id) and
 | 2026-10-30 | Restock refunded units that never shipped | DESIGN.md §5.3 (change-log row `restock-unshipped-refunds`), issue `ledgerline-kml` |
 | 2026-10-30 | Refund by amount as well as by units | DESIGN.md §5.4 (change-log row `refund-by-amount`), issue `ledgerline-lpi` |
 | 2026-10-30 | Persist the message queue | DESIGN.md §6.2, as durable subscriber progress (change-log row `resume-after-restart`), issue `ledgerline-gc4` |
+| 2026-10-30 | Bound the idempotency store | DESIGN.md §6.4 (change-log row `bounded-idempotency`) |
 
 ## Dropped
 

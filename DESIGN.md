@@ -217,6 +217,34 @@ persisting.
 Off by default, versioned by state schema, and never required for correctness: an
 aggregate loaded from a snapshot is identical to one replayed from scratch.
 
+### 6.4 Idempotency keys are remembered for a window
+
+A command's idempotency key is remembered for a configurable window after the command
+ran, **24 hours by default**, measured on the injected clock; the window can be set to
+forever. Within the window a repeated key behaves exactly as before (§2.4). After it, the
+key is forgotten: removed from memory, not rebuilt at start-up, and a command sent under
+it runs as a new command.
+
+- **The window is a promise to callers, not to the service's own reactions.** Clients
+  retry within seconds or minutes; 24 hours matches common payment-API practice. A
+  caller that retries later gets the command run as new: a refund or credit without an
+  explicit id refunds twice, `ReceiveStock` adds stock twice, a line without an explicit
+  id is added twice, and commands whose effect can only happen once (`CreateOrder`,
+  `PlaceOrder`, `CapturePayment`) fail with their business error instead of returning
+  `duplicate`. That is the stated cost.
+- **A key reused after its window belongs to its latest use**, including when keys are
+  rebuilt at start-up; its earlier use is past the window by definition.
+- **The service's own reactions must not depend on remembered keys.** Since §6.2,
+  recovery no longer re-sends finished work, but `republish()` still re-sends every
+  stored event, of any age. Every command a process manager sends must therefore be a
+  no-op when its effect has already happened, judged by the aggregate's own state rather
+  than by the key. A re-sent `PaymentCaptured` for an order that has since shipped must
+  not be mistaken for "the order cannot accept this payment" and refunded (§4.3).
+- *Rejected:* keeping the last N keys. Memory is predictable, but how long a key
+  survives then depends on traffic, so a caller cannot know its safe retry window.
+- *Rejected:* forever by default with an opt-in window. It leaves the store unbounded for
+  anyone who does not configure it, which is the problem this section exists to fix.
+
 ## 7. Change log
 
 Rows are chronological, oldest first; append new rows at the bottom. A row is identified
@@ -229,3 +257,4 @@ for a planning session. Cite a row as change-log row followed by its slug in bac
 | 2026-10-30 | `restock-unshipped-refunds` | Added §3.2 (process managers act on what the event recorded) and §5.3 (refunded units of a paid, unshipped order return to stock; `OrderLineRefunded` moves to v2) | First planning session. Refunded but unshipped stock was stranded until someone ran `ReceiveStock` by hand |
 | 2026-10-30 | `refund-by-amount` | Added §5.4 (credits by amount; money returned never exceeds what was paid; a credit comes off the last refunds; `OrderLineRefunded` moves to v3) and reworded §5.2, which had rejected refunds by amount for want of this rule | Second planning session. Goodwill credits had no home because refunds were per unit only |
 | 2026-10-30 | `resume-after-restart` | Replaced §6.2 (the queue is in memory; recovery by `republish()`) with durable per-subscriber progress over a file-backed store: unfinished work resumes on registration, dead letters survive as dead letters, unknown subscribers start at the end of the log | Third planning session. Queued work was lost on restart until someone remembered `republish()`, and republish-everything recovery blocks bounding the idempotency store |
+| 2026-10-30 | `bounded-idempotency` | Added §6.4 (idempotency keys are remembered for a configurable window, 24 hours by default; process managers' commands must be no-ops by aggregate state, not by key) | Fourth planning session. The store held every key forever and rebuilt them all at start-up; §6.2 made bounding it safe for recovery, and `republish()` showed which reactions still leaned on keys |

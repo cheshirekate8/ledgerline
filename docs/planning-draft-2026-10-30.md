@@ -1,223 +1,219 @@
-# Planning draft — 2026-10-30 (third session)
+# Planning draft — 2026-10-30 (fourth session)
 
-One task from the third planning session. This file is superseded by the Beads issue at
+One task from the fourth planning session. This file is superseded by the Beads issue at
 freeze; the issue is the canonical spec from then on. (Earlier sessions' drafts, for
-`ledgerline-kml` and `ledgerline-lpi`, are in git history.)
+`ledgerline-kml`, `ledgerline-lpi` and `ledgerline-gc4`, are in git history.)
 
-## Task: Resume unfinished work after a restart
+## Task: Remember idempotency keys for a window
 
 **Label:** hard · **Priority (proposed):** 1 · **Depends on:** nothing ·
-**design-ref:** DESIGN.md §6.2 (with §6.1, §2.2, §2.4) ·
-**Issue:** `ledgerline-gc4` · **Frozen tests:** `tests/acceptance/ledgerline-gc4/`
+**design-ref:** DESIGN.md §6.4 (with §2.4, §4.3, §6.2) ·
+**Issue:** `ledgerline-aly` · **Frozen tests:** `tests/acceptance/ledgerline-aly/`
 
 ### Description
 
-With a file-backed event store, the service remembers each subscriber's progress: which
-events it has finished handling and which ended in the dead-letter queue. After a
-restart, every event a subscriber had not finished is delivered to it again, without
-anyone calling `republish()`, and events it had finished are not delivered again. Dead
-letters survive the restart as dead letters and can still be redriven. This covers the
-built-in fulfillment and payment processes and any named subscriber added with
-`subscribe()`.
+Idempotency keys stop living forever. A key is remembered for a window after its command
+ran, 24 hours by default; within the window a repeated key behaves exactly as today, and
+after it the key is forgotten, both in memory and when the store is rebuilt at start-up,
+so a command sent under it runs as a new command. Because `republish()` can still re-send
+any stored event of any age, every reaction the service sends itself must be harmless to
+repeat on the strength of the aggregates' own state, without relying on a remembered key.
 
 ### Constraints
 
-- Applies when `persistence` is `{ kind: 'json-file' }`. Progress is stored in the same
-  directory as the event log, so copying or removing that directory takes it along; its
-  file name and format are the implementer's choice. The `durable` option governs
-  whether progress writes are fsynced, as it does for events. In-memory and custom event
-  stores behave exactly as today.
-- A subscriber's progress is recorded only after its handler succeeds for an event, so
-  delivery stays at-least-once (§2.4): a delivery in flight or waiting on a retry when the
-  process stopped is delivered again after the restart.
-- When a named subscriber is registered (the built-in ones inside `createLedgerline`,
-  others through `subscribe()`), every event it had not finished, other than its dead
-  letters, is queued for it at once, in stream order, ahead of anything appended later.
-  It is not delayed until the first `processMessages()` (§6.1).
-- A subscriber is known from the moment it is first registered against the store: from
-  then on its unfinished events are tracked, even if it stops before finishing its
-  first one. A name never registered against this store starts at the end of the log,
-  as a new subscriber does today: it receives only events appended after it was
-  registered. Opening a log written before this change therefore delivers nothing.
-- A delivery's progress is written before `processMessages()` resolves, whatever
-  `durable` is; `durable` only decides whether it is fsynced.
-- Dead letters survive a restart: from the moment the store is opened,
-  `deadLetters.list()` shows each one with its subscriber, event and error;
-  `redrive(id)` puts it back on the queue; and it is never retried automatically. A dead
-  letter that is redriven and then succeeds counts as finished, so it is not delivered
-  again after a later restart. Redriving a dead letter whose subscriber is not
-  registered behaves as it does today.
-- A dead letter keeps its message id across restarts, so an id noted before a restart
-  still redrives it afterwards. An event's latest outcome for a subscriber wins: if it
-  is dead-lettered, it is listed; if it later succeeds (by redrive or a republished
-  copy), it is finished and no longer listed.
-- A known subscriber re-registered with an aggregate type it did not have before starts
-  that type at the end of the log, as a new subscriber would.
-- The backlog's order across different streams, and across subscribers, is the
-  implementer's choice, provided each stream stays in order and the result is
-  deterministic (§2.2). So is whether progress is written per delivery or once per
-  drain: either keeps delivery at-least-once.
-- The four read-model projections rebuild from the log on start, so whether they also
-  resume is the implementer's choice; nothing here depends on it.
-- Progress belongs to one event log file: two logs in one directory keep separate
-  progress. Progress is the only thing besides that log's own file written to its
-  directory. One instance per log at a time is assumed, as for the event log.
-- Unfinished deliveries resume with a fresh retry budget; attempt counts are not
-  persisted.
-- `republish()` is unchanged and still sends every stored event to every subscriber.
-- Progress that cannot be read is an error at start-up, never treated as "nothing
-  handled" or "everything handled". A partial trailing record is unreadable too, as it
-  is for the event log, and so is progress that refers to events the log does not
-  contain. All of a log's progress is read when the store is opened, so
-  `createLedgerline` throws, with a plain `Error` subclass (an infrastructure fault, not
-  a `DomainError`) that names the file.
+- A new option `idempotencyWindowMs` on `LedgerlineOptions`: a positive safe integer
+  number of milliseconds, or `Number.POSITIVE_INFINITY` for forever. It defaults to
+  `86_400_000` (24 hours). Any other value (zero, negative, fractional, `NaN`,
+  `-Infinity`, an unsafe integer, a non-number) makes `createLedgerline` throw a
+  `RangeError`.
+  An option present but `undefined` counts as omitted, as for the other options.
+- A key is remembered while the injected clock's time is before the moment its command
+  ran plus the window, and forgotten from then on. The moment a command ran is the
+  clock's time when its result is recorded, which is the `occurredAt` of the events it
+  produced; for a key rebuilt at start-up it is read from those events.
+- Forgotten means removed, not just ignored: keys past their window are dropped from
+  memory no later than the next `execute()` call that gets as far as checking its key,
+  whatever that command's outcome, and are not rebuilt at start-up. A new read-only
+  method `idempotencyKeyCount()` on `Ledgerline` returns how many keys are held, so the
+  bound can be observed; between a key's expiry and that next command it may still be
+  counted. It counts the records the store actually keeps, never a figure filtered
+  against the clock when read. Right after start-up it is the number of keys rebuilt.
+  As today, a command that produced no events is remembered in memory but not rebuilt
+  at start-up (reviewed, not frozen).
+- A key reused after its window belongs to its latest use, in memory and when rebuilt at
+  start-up: a repeat of the latest command is a duplicate returning only that
+  execution's event ids, and a different command under it conflicts. At start-up a
+  key's latest use is the stored events carrying it with the latest `occurredAt` (one
+  command's events share one `occurredAt`), whatever window was in force when the
+  earlier uses ran. (Today's rebuild merges every use of a key under its first command,
+  which would raise a false conflict after a restart.)
+- Within the window, everything about keys behaves as today: a repeat returns the
+  original result with `duplicate: true` without running the handler, a different
+  command under a used key throws `IdempotencyConflictError`, and concurrent deliveries
+  of one key share one execution. After the window, a command under that key, the same
+  command or a different one, simply runs.
+- Every command the service sends itself (the fulfillment and payment processes, and the
+  reservation-expiry service) is a no-op when its effect has already happened, judged by
+  the aggregate's own state when the command is handled, so it is equally a no-op when a
+  client sends the same command directly; `republish()` of any stored event, of any age,
+  therefore changes nothing once the earlier work is done. In particular, `MarkOrderPaid` for
+  the payment an order already accepted is a no-op in every later status (Shipped,
+  Delivered, Refunded), so a re-sent `PaymentCaptured` never triggers the §4.3
+  compensation refund. `MarkOrderPaid` naming any other payment is still refused, so a
+  second payment for an already-paid order is still compensated. "Changes nothing" means
+  state and stored events; a repeated warning in the log is not a change.
+- A business-rule failure is still not recorded, so it can be retried under the same key
+  (unchanged).
 - Determinism (§2.2) holds: with an injected clock and ids, the same commands still give
   a byte-identical event log and log output.
-- The worker pool's one-line-per-outcome log format is unchanged.
-- README's "Delivery guarantees" section describes restart recovery and the role
-  `republish()` still has; its statement that queued work is not persisted becomes wrong
-  and must change. Reviewed, not frozen.
+- README's "Delivery guarantees" section states the window, its default, how to change
+  it, and what a retry after it does (the list in DESIGN.md §6.4). Reviewed, not frozen.
+- The existing integration test "restores read models and idempotency after a restart"
+  (`tests/integration/replay-and-persistence.test.ts`) re-sends a `ShipOrder` key from
+  before its scenario moves the clock 24 hours on, so it is expected to need updating
+  (for example a forever window in that test); it is not frozen.
 - The usual project rules in `CLAUDE.md`: injected clock and ids, no new dependencies,
   no file over 400 lines.
 
 ### Done means
 
-Every test runs the whole service over a JSON-file event log in a temporary directory,
-with a fixed clock (the logger uses it too, writing to a memory sink), seeded ids, MUG
-at 1000 and CUP at 500 cents, no tax, and 3 delivery attempts with a fixed 100 ms
-backoff. A **restart** is a new instance over the same directory, without calling
-`close()` first, as after a crash; each instance over a directory gets its own id seed
-and command keys that no earlier instance used. A **recorder** is a subscriber added
-with `subscribe()` that records what it receives. "Handled lines" are the worker pool's
-`message.handled` log lines.
+Every test runs the whole service with a fixed clock starting at 2020-01-01T00:00:00Z
+(years before the real date, so wall-clock time cannot pass for it), seeded ids, MUG at
+1000 and CUP at 500 cents and no tax. `W` is 24 hours. Where a restart is needed, the log
+is a JSON file in a temporary directory, and a restart is a new instance over it with
+its own id seed. Exact key counts are asserted only in scenarios with no process-manager
+traffic.
 
-1. **Built-in processes finish queued work after a restart, without `republish()`.**
-   Order A is placed and processed; order B is placed but not processed; restart. Once
-   the new instance has processed its messages, B's stock is reserved (MUG reserved 3
-   of 5), every handled line for the fulfillment process names B and none names A, and
-   each of B's unfinished events is handled once. Likewise a payment captured for B but
-   not processed before a restart leaves B Paid afterwards.
-2. **A recorder resumes exactly where it stopped, and its progress moves with the
-   directory.** A recorder registered over an empty log sees orders A and B processed;
-   more events for A and a new order C are left unprocessed; the directory is copied
-   elsewhere and opened. After the recorder is registered again and messages are
-   processed, it has received exactly the unprocessed events, each once, with each
-   order's sequence numbers continuing from where that order stopped.
-3. **The unfinished backlog is queued at registration, ahead of later events.** Order
-   A's first events are left unprocessed for a recorder; restart; the recorder is
-   registered, a further command on A runs before any processing, then messages are
-   processed. Everything the recorder receives is exactly A's whole stream, sequence 1
-   to the last, in order, each once, and nothing is dead-lettered.
-4. **A delivery waiting on a retry when the process stopped is delivered again, with a
-   fresh retry budget.** A recorder fails twice on A's `OrderPlaced` (two retries
-   scheduled); restart before the third attempt; it fails once more, then succeeds. The
-   new instance logs a retry at attempt 1, never dead-letters it, and the recorder
-   receives `OrderPlaced` and then A's later events, in order.
-5. **Dead letters survive a restart, are never retried on their own, and a redriven
-   success stays finished.** A recorder that always fails dead-letters A's `OrderPlaced`
-   with error "sink down"; restart. The dead-letter list shows it with the same
-   subscriber, event and error; processing and moving the clock past several backoffs
-   delivers nothing for it. Once the recorder is fixed, redriving it by the id the new
-   instance lists delivers it once and empties the list; after another restart the list
-   is still empty and the event is not delivered again.
-6. [guard] **A subscriber never registered before starts at the end of the log.** A
-   recorder with a new name, registered over a non-empty log, receives only events
-   appended after it was registered. A copy of an event log written by today's code
-   (fixture `pre-change-history.ndjson`: MUG stocked with 5, order A placed and
-   processed, order B placed but not processed), opened alone in a directory, handles
-   nothing for the built-in processes on the first processing (no handled lines for
-   either), and B stays unreserved (MUG reserved 1) until `republish()` is called and
-   processed.
-7. **Unreadable progress stops start-up.** After work has been processed, the directory
-   holds at least one file besides the event log. When every such file is overwritten
-   with `\u0000not a record` (not empty, no trailing newline), creating the service over
-   the directory throws. When instead every such file loses the end of its last record
-   (its trailing newline and the 5 bytes before it removed), creating the service
-   throws too.
-8. [guard] **`republish()`, other stores and determinism are unchanged.** After a restart
-   that resumed work, `republish()` returns the number of stored events and the recorder
-   receives every order event at least once. A `JsonFileEventStore` passed as a
-   `custom` store leaves nothing in its directory but its own file. Criterion 1's
-   scenario, restart included, run twice in fresh directories gives a byte-identical
-   event log and identical log lines, timestamps included.
+1. **The default window runs on the injected clock and ends exactly at `W`.** With the
+   option omitted, a `ReceiveStock` of 3 under key K at T0: at T0+W−1 re-sending K is a duplicate with the original event
+   ids and changes nothing, and a different payload under K is refused with
+   `IDEMPOTENCY_CONFLICT`; at exactly T0+W re-sending K runs as new (`duplicate: false`,
+   one new `StockReceived`, on-hand up 3), and a second key used at T0 takes a different
+   command at T0+W and runs.
+2. **The option is honoured and validated.** With a 60 000 ms window a key is a duplicate
+   at +59 999 ms and runs as new at +60 000. With `Number.POSITIVE_INFINITY` a key is
+   still a duplicate ten years later, including after a restart. `0`, `-1`, `1.5`, `NaN`,
+   `-Infinity`, `2^53` and the string `"86400000"` make `createLedgerline` throw a
+   `RangeError`; `1`, `Infinity` and an omitted option (24 hours) are accepted.
+3. **Expired keys are removed, not just ignored, after any command that reaches its key
+   check.** Five keys at T0 (the stock registration and four receipts) give a count of 5;
+   three more at T0+12h give 8; after one more command (c1) at T0+24h the count is
+   exactly 4; at T0+36h a command refused by a business rule (`ReceiveStock` on an
+   unknown SKU) leaves exactly 1, c1.
+4. **Start-up rebuilds only live keys, measured from when their commands ran, and a
+   reused key belongs to its latest use.** Keys a1–a3 used at T0 and b1–b2 at T0+12h:
+   restarted at T0+23h the count is 5 and a2 is a duplicate; at T0+24h, after one
+   command under a new key c1, the count is 3 (b1, b2, c1), and a2 then runs as new.
+   Restarted again at T0+30h the count is 4 (b1, b2, c1, a2), a2 is a duplicate
+   returning only its T0+24h event ids, and a different command under a2 conflicts. A
+   key used at T0 is rebuilt by a restart at T0+W−1 but not by one at exactly T0+W,
+   after which re-sending it runs as new. A key reused after its window with a different command is, after
+   a restart, a duplicate for the new command and a conflict for the old one.
+5. **`MarkOrderPaid` for the payment the order accepted does nothing.** Sent under a fresh
+   key to a Shipped, a Delivered and a fully Refunded order, it resolves with
+   `duplicate: false` and no events, the log is unchanged, and once settled there is no
+   new payment refund and no dead letter. [guard] Naming a different payment, it is
+   still refused with `INVALID_ORDER_TRANSITION` in Paid, Shipped, Delivered and
+   Refunded.
+6. **`republish()` after the window changes nothing, in every reachable final state.**
+   A store holds orders that are: delivered; shipped, credited and partly refunded;
+   paid, partly refunded with restock, and credited; fully refunded while Paid; fully
+   refunded after delivery; cancelled by the customer; cancelled out of stock; expired
+   after a payment was captured and compensated; paid by one of two captured payments
+   (the other compensated), then shipped and delivered; and placed with stock reserved
+   but never paid. At T0+25h, after a restart, the key count is 0; `republish()` and
+   processing leave the stored log, every order summary, the stock levels and every
+   payment's refunds exactly as they were, with nothing dead-lettered. The same holds on
+   the original instance without a restart, after one unrelated command at T0+25h.
+7. [guard] **Inside the window, keys behave as today.** Two concurrent deliveries of one
+   key run once (one result `duplicate: false`, one `true`, one event stored). A
+   command refused by a business rule (`ReceiveStock` on an unknown SKU) is not
+   remembered: once the SKU exists, the same key and payload run.
+8. [guard] **Determinism.** The scenarios of criteria 4 and 6, run twice with the same
+   clock and seeds across expiries, a restart and `republish()`, give byte-identical
+   event logs and identical log output.
 
 ### Test map
 
 | Criterion | Test file |
 |---|---|
-| 1 | `built-in-processes-resume.test.ts` |
-| 2 | `named-subscriber-resumes.test.ts` |
-| 3 | `backlog-queued-at-registration.test.ts` |
-| 4 | `retry-in-progress-resumes.test.ts` |
-| 5 | `dead-letters-survive-restart.test.ts` |
-| 6 (guard) | `unknown-subscriber-starts-at-end.test.ts` (fixture `pre-change-history.ndjson`) |
-| 7 | `unreadable-progress-fails-start.test.ts` |
-| 8 (guard) | `republish-and-other-stores-unchanged.test.ts` |
+| 1 | `window-on-injected-clock.test.ts` |
+| 2 | `window-option.test.ts` |
+| 3 | `expired-keys-removed.test.ts` |
+| 4 | `startup-rebuild.test.ts` |
+| 5 | `mark-paid-accepted-payment.test.ts` |
+| 6 | `republish-after-window.test.ts` |
+| 7 (guard) | `within-window-unchanged.test.ts` |
+| 8 (guard) | `determinism.test.ts` |
 
 `harness.ts` is shared setup inside the frozen directory; it is not a test.
 
 ### Evidence gathered before approval
 
-- **Red at the fork point:** against today's code 8 of 13 tests fail, each for the
-  intended reason (nothing resumes, dead letters are gone, no progress exists). None
-  fails in setup. The 5 passing tests are exactly the two labelled guards, criteria 6
-  and 8. The freeze gate reports RED with the control green, and counts 2 guards.
+- **Red at the fork point:** against today's code 10 of 15 tests fail, each for the
+  intended reason (no window, no `idempotencyKeyCount()`, no validation, `MarkOrderPaid`
+  refused on a shipped order, a reused key conflicting). The 5 passing are the guard
+  half of criterion 5, criteria 7 and 8, and criterion 2's "forever" case, which holds
+  today because keys are never forgotten. The freeze gate reports RED with the control
+  green, and counts 3 guards.
 - **Can go green:** a throwaway implementation in a temporary worktree (since removed)
-  passes all 13, typechecks, and passes every existing test (366) and both earlier
-  acceptance suites (`ledgerline-kml` and `ledgerline-lpi`, 14 each). The task agent
-  does not see it and builds its own.
+  passes all 15, typechecks, and passes all three earlier acceptance suites. Against it
+  exactly one existing test fails, the integration test named in Constraints, for the
+  reason given there.
 - **Catches wrong implementations:** that implementation with one deliberate bug at a
   time; every one fails at least one test:
 
   | Mutation | Caught by |
   |---|---|
-  | M1 progress kept but no backlog queued | 1, 2, 3, 4 |
-  | M2 everything re-sent on registration (ignores finished work) | 1, 2, 4, 5 |
-  | M3 progress recorded before the handler succeeds | 4 |
-  | M4 backlog queued lazily at the first `processMessages()` | 3 |
-  | M5 dead letters lost on restart | 5 |
-  | M6 dead letters retried automatically on restart | 5 |
-  | M7 a never-registered subscriber treated as having handled nothing | 6 |
-  | M8 unreadable progress lines skipped | 7 (both cases) |
-  | M9 a torn last record tolerated, whole-file garbage still refused | 7 (torn case) |
-  | M10 a redriven dead letter that succeeds is not recorded | 5 |
-  | M11 progress only for the built-in subscribers | 2, 3, 4, 5 |
-  | M12 progress decided by store type rather than persistence kind | 8 |
-  | M13 a restored dead letter gets a new id | 5 |
+  | M1 keys never evicted | 1, 2, 3, 4, 6 |
+  | M2 expired keys ignored on read but never removed | 3, 4, 6 |
+  | M3 the window held one millisecond too long in memory | 1, 2, 3, 4 |
+  | M4 every key rebuilt at start-up | 4, 6 |
+  | M5 no key rebuilt at start-up | 2, 4 |
+  | M6 start-up keeps a key at exactly its window end | 4 (the boundary restart only) |
+  | M7 the window measured on wall-clock time | 1, 2, 3, 4 |
+  | M8 a reused key rebuilt as its first use (today's merge) | 4 |
+  | M9 `MarkOrderPaid` not made a no-op for the accepted payment | 5, 6, 8 |
+  | M10 `MarkOrderPaid` a no-op for any payment once paid | 5 (guard half), 6, 8 |
+  | M11 the window option not validated | 2 |
+  | M12 a forever default | 1, 3, 4, 6 |
+  | M13 keys pruned only when a command succeeds | 1, 2, 3, 4 |
+  | M14 the service's own reaction keys exempt from expiry | 6 |
 
-  The two guards are therefore not decoration: M7 and M12 are caught only by them.
-- **Fixture** `pre-change-history.ndjson` was written by the service as it is today
-  (10 events, byte-identical across two generations).
+  A count filtered when read (T3) cannot be told from real removal by any test, so the
+  Constraints define the count and review holds the implementation to it.
 
 ### Review dispositions
 
-Criteria drafter (fresh context, read the code) wrote the eight criteria above; adopted
-with wording condensed.
+Criteria drafter (fresh context, read the code, traced every reaction against every later
+state) wrote the eight criteria above; adopted with wording condensed.
 
 | # | Source | Finding | Disposition |
 |---|---|---|---|
-| D1 | drafter | "No progress → start at end" drops the backlog of a subscriber that crashes before its first success | **Accepted**: a subscriber is known from first registration; DESIGN §6.2 amended; Constraints |
-| D2 | drafter | When progress is written is unstated | **Accepted**: before `processMessages()` resolves; `durable` only governs fsync |
-| D3 | drafter | When persisted dead letters are listed, and redrive of an unregistered subscriber | **Accepted**: listed from open; unregistered redrive behaves as today |
-| D4 | drafter | Read-model hosts unaddressed | **Accepted**: implementer's choice, stated; criteria filter by subscriber |
-| D5 | drafter | Torn trailing progress record | **Accepted**: unreadable, as for the event log |
-| D6 | drafter | Criterion 6 deletes every non-log file, valid only if progress is all that is there | **Accepted**: Constraints say progress is the only other thing written there |
-| D7 | drafter | README requirement not machine-checkable | **Accepted**: reviewed, not frozen |
-| D8 | drafter | Two live instances on one directory unspecified | **Accepted**: one instance per directory assumed |
-| D9 | drafter | Stream-order queuing is a needed "what"; per-event progress must not be frozen | **Accepted**: no change; criteria 2 and 5 exercise holes a single watermark cannot represent |
-| D10 | drafter | A backlog consumes generated ids, so a restarted run differs from an unrestarted one | **Accepted**: criterion 8 compares two identical restarted runs |
-| S1 | scope | One task of the right size; hard fits | **Accepted**: no change |
-| A1 | ambiguity | A known name re-registered with a new aggregate type | **Accepted**: that type starts at the end of the log |
-| A2 | ambiguity | What a restored dead letter carries; whether its id is stable | **Accepted**: id stable across restarts; asserted in criterion 5 |
-| A3 | ambiguity | An event both finished and dead-lettered | **Accepted**: latest outcome wins |
-| A4 | ambiguity | Progress written per delivery or per drain | **Accepted**: implementer's choice, stated; both keep at-least-once |
-| A5 | ambiguity | Backlog order across streams and subscribers | **Accepted**: implementer's choice if per-stream order and determinism hold |
-| A6 | ambiguity | Two logs in one directory; progress that disagrees with the log | **Accepted**: progress belongs to one log file; disagreement is unreadable |
-| A7 | ambiguity | Where unreadable progress surfaces; error type | **Accepted**: all read at open, so `createLedgerline` throws a plain `Error` subclass naming the file |
-| T1 | testability | Restarts need their own seed and command keys | **Accepted**: stated in the preamble; the harness does it |
-| T2 | testability | Criterion 3 passes a backlog queued too late | **Accepted**: asserts the recorder's whole list equals A's whole stream |
-| T3 | testability | Log timestamps use the system clock unless the logger is given the fixed one | **Accepted**: preamble pins it; criterion 8 compares timestamps too |
-| T4 | testability | "Custom store writes nothing" is vacuous for an in-memory store | **Accepted**: uses a `JsonFileEventStore` passed as `custom` |
-| T5 | testability | The torn-trailing-record constraint has no criterion | **Accepted**: second case in criterion 7 |
-| T6 | testability | Garbage bytes unpinned; an empty file must not count | **Accepted**: literal non-empty content pinned |
-| T7 | testability | Criterion 6's old log must be a checked-in fixture, not produced by deleting files | **Accepted**: fixture `pre-change-history.ndjson`, written by today's code |
+| D1 | drafter | Only `MarkOrderPaid` is unsafe without its key, three ways: compensation refund for shipped goods; `REFUND_EXCEEDS_CAPTURED` dead letter on refunded or credited orders; a 0 refund on a zero-total shipped order | **Accepted**: one constraint covers all three; criteria 5 and 6 |
+| D2 | drafter | An over-broad fix ("ever paid → no-op") would silently keep a second payment | **Accepted**: constraint keeps refusing other payments; guard half of criterion 5; paid-twice order in criterion 6 |
+| D3 | drafter | Today's rebuild merges every use of a key under its first command | **Accepted**: a reused key belongs to its latest use (DESIGN §6.4, Constraints, criterion 4). Not put to the user: the earlier use is past its window by definition, so there is no other coherent answer |
+| D4 | drafter | Re-sent compensation warnings on republish | **Accepted**: "changes nothing" means state and events, not logs; stated |
+| D5 | drafter | The stated cost lists only double refunds | **Accepted**: DESIGN §6.4 and the README requirement list every effect |
+| D6 | drafter | Event-less commands are not rebuilt at start-up (true today) | **Accepted**: stated; restart counts use event-producing commands only |
+| D7 | drafter | "Next command" and the count before any command unclear | **Accepted**: whatever its outcome; after start-up the count is the keys rebuilt |
+| D8 | drafter | No upper bound on the window | **Accepted**: safe integers only; `2^53` refused in criterion 2 |
+| D9 | drafter | Exact counts must avoid process-manager keys; no test may touch the store's interface | **Accepted**: preamble states it |
+| D10 | drafter | Settling moves the clock; criterion 6 needs its count of 0 to mean anything | **Accepted**: boundary steps do not settle; the count of 0 is asserted |
+| S1 | scope | One task; hard fits; window and `markPaid` fix depend on each other | **Accepted**: no change |
+| A1 | ambiguity | No rule for where a reused key's new use starts at rebuild | **Accepted**: the events with the latest `occurredAt`, whatever window applied before |
+| A2 | ambiguity | Count between expiry and pruning undefined | **Accepted**: may still include it until the next command; tests read the count only after one |
+| A3 | ambiguity | Where the no-op lives | **Accepted**: in handling the command, so a client sending it directly gets the same no-op (criterion 5 sends it directly) |
+| A4 | ambiguity | "Reaction" vs "process manager"; expiry service unaddressed | **Accepted**: one term, expiry service named in scope |
+| A5 | ambiguity | "The moment a command ran" undefined for in-memory keys | **Accepted**: clock time when the result is recorded, equal to its events' `occurredAt` |
+| A6 | ambiguity | Explicit `undefined` | **Accepted**: counts as omitted |
+| A7 | ambiguity | What counts as "the next command" for pruning | **Accepted**: an `execute()` call that reaches its key check |
+| A8 | ambiguity | Criterion 4's "one command" readable two ways | **Accepted**: names the key c1 and lists the counted keys |
+| T1 | testability | Exact counts depend on an unstated command sequence | **Accepted**: criteria 3 and 4 name every counted key; the tests pin the sequence |
+| T2 | testability | The 24-hour default could go untested if the harness passes it explicitly | **Accepted**: criterion 1 runs with the option omitted |
+| T3 | testability | A count filtered when read would pass while the store never shrinks | **Accepted**: Constraints define the count as records kept; not machine-checkable, so held in review |
+| T4 | testability | Criterion 6's no-restart half would pass if process-manager keys were exempt | **Accepted**: already asserts a count of exactly 1 before republishing |
+| T5 | testability | Pruning after a refused command is untested | **Accepted**: criterion 3's last step is a refused command |
+| T6 | testability | The start-up boundary is untested | **Accepted**: restarts at T0+W−1 and exactly T0+W in criterion 4 |
+| T7 | testability | "Event-less commands not rebuilt" has no criterion | **Accepted**: marked reviewed, not frozen; it is today's behaviour, unchanged |
+| P1 | planner | Setup bug found at the red run: the expiry sweep also cancelled the order meant to stay reserved | **Fixed**: that order is placed after the sweep, and setup checks every order's final status |
