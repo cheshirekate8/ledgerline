@@ -10,6 +10,7 @@ import { Cents, cents, nonNegativeCents } from '../shared/money';
 import { hasReached } from '../shared/time';
 import {
   CouponAlreadyAppliedError,
+  CreditExceedsRefundableError,
   DuplicateDiscountCodeError,
   EmptyOrderError,
   InvalidOrderTransitionError,
@@ -24,6 +25,7 @@ import {
   ReservationNotExpiredError,
 } from './order-errors';
 import { ORDER_AGGREGATE, OrderEvent } from './order-events';
+import { creditAmount, creditReason, paidBackFor, refundableBalance } from './order-refunds';
 import { evolveOrder, INITIAL_ORDER_STATE, OrderState } from './order-state';
 import { canTransition, OrderStatus, REFUNDABLE_STATUSES } from './order-status';
 
@@ -32,8 +34,8 @@ import { canTransition, OrderStatus, REFUNDABLE_STATUSES } from './order-status'
  * while it is a draft; placing it fixes the price and starts the stock
  * reservation clock. Every lifecycle method either moves the order along
  * a legal transition or throws a typed domain error. Methods that an
- * at-least-once delivery may repeat (cancel, mark paid, refund with a known
- * refund id) are no-ops the second time.
+ * at-least-once delivery may repeat (cancel, mark paid, refund or credit with
+ * a known refund id) are no-ops the second time.
  */
 export class Order extends AggregateRoot<OrderState, OrderEvent> {
   readonly aggregateType = ORDER_AGGREGATE;
@@ -86,8 +88,14 @@ export class Order extends AggregateRoot<OrderState, OrderEvent> {
     return this.state.paymentId;
   }
 
-  get refundedCents(): Cents {
-    return this.state.refundedCents;
+  /** Money given back on this order: credits plus what unit refunds paid back. */
+  get returnedCents(): Cents {
+    return this.state.returnedCents;
+  }
+
+  /** What is still left to give back: paid minus {@link returnedCents}. */
+  get refundableCents(): Cents {
+    return refundableBalance(this.state);
   }
 
   refundedQuantity(lineId: string): number {
@@ -232,6 +240,11 @@ export class Order extends AggregateRoot<OrderState, OrderEvent> {
    * only while the order is Paid and nothing has shipped. The order decides it
    * here rather than letting fulfillment read the status later, because by then
    * the order may have shipped (§5.3, §3.2).
+   *
+   * It records separately how much money the refund actually pays back: a
+   * credit comes off the last refunds, so once the balance is spent a refund
+   * still moves its units, restocks them and closes the order, but returns
+   * nothing (§5.4).
    */
   refundLine(refundId: string, lineId: string, quantity: number): void {
     if (this.state.refundIds.includes(refundId)) {
@@ -252,18 +265,49 @@ export class Order extends AggregateRoot<OrderState, OrderEvent> {
     const refund = refundForUnits(line, alreadyRefunded, quantity);
     this.raise({
       type: 'OrderLineRefunded',
-      version: 2,
+      version: 3,
       payload: {
         refundId,
         lineId,
         paymentId: this.state.paymentId!,
         refund,
         returnsToStock: this.state.status === 'Paid',
+        paidBackCents: paidBackFor(this.state, refund.totalCents),
       },
     });
     if (this.allUnitsRefunded()) {
-      this.raise({ type: 'OrderRefunded', version: 1, payload: { totalRefundedCents: this.state.refundedCents } });
+      this.raise({ type: 'OrderRefunded', version: 1, payload: { totalRefundedCents: this.state.returnedCents } });
     }
+  }
+
+  /**
+   * Gives money back without refunding any units, such as a goodwill credit
+   * for a late delivery. It is allowed in the same statuses as a unit refund,
+   * changes neither the status nor stock, and draws on the same balance: a
+   * credit larger than what is left to give back is refused (§5.4).
+   *
+   * The checks run in the same order as a unit refund's: an id the order has
+   * already used — by a credit or by a refund — is a no-op before anything
+   * else, then the status, then the input, then the balance.
+   */
+  credit(creditId: string, amountCents: number, reason: string): void {
+    if (this.state.refundIds.includes(creditId)) {
+      return;
+    }
+    if (!REFUNDABLE_STATUSES.includes(this.state.status)) {
+      throw new OrderNotRefundableError(this.orderId, this.state.status);
+    }
+    const amount = creditAmount(amountCents);
+    const trimmedReason = creditReason(reason);
+    const refundable = this.refundableCents;
+    if (amount > refundable) {
+      throw new CreditExceedsRefundableError(this.orderId, amount, refundable);
+    }
+    this.raise({
+      type: 'OrderCredited',
+      version: 1,
+      payload: { creditId, paymentId: this.state.paymentId!, amountCents: amount, reason: trimmedReason },
+    });
   }
 
   protected evolve(state: OrderState, event: OrderEvent): OrderState {

@@ -76,6 +76,23 @@ describe('OrderSummaryProjection', () => {
     expect(host.projection.all()).toHaveLength(4);
   });
 
+  it('counts a credit and only what a unit refund paid back as refunded', async () => {
+    const { store, upcasters, run, orders } = await scenario();
+    // o-1 was credited after a 1_821 refund, so the last refund pays back less.
+    await run({ type: 'CreditOrder', payload: { orderId: 'o-1', amountCents: 5_000, reason: 'late', creditId: 'c-1' } });
+    await run({ type: 'RefundOrderLine', payload: { orderId: 'o-1', lineId: 'a', quantity: 2, refundId: 'r-3' } });
+    await run({ type: 'RefundOrderLine', payload: { orderId: 'o-1', lineId: 'b', quantity: 1, refundId: 'r-4' } });
+    expect(orders.load('o-1')!.status).toBe('Refunded');
+
+    const host = new ProjectionHost(new OrderSummaryProjection(), upcasters);
+    host.rebuild(store);
+    expect(host.projection.get('o-1')).toMatchObject({ status: 'Refunded', refundedCents: 7_737 });
+
+    const history = new ProjectionHost(new CustomerHistoryProjection(), upcasters);
+    history.rebuild(store);
+    expect(history.projection.get('alice')).toMatchObject({ lifetimeSpendCents: 0 });
+  });
+
   it('returns copies that callers cannot use to change the read model', async () => {
     const { store, upcasters } = await scenario();
     const host = new ProjectionHost(new OrderSummaryProjection(), upcasters);

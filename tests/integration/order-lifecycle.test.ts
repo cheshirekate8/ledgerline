@@ -70,6 +70,37 @@ describe('order lifecycle through the queue', () => {
     expect(app.readModels.dailyRevenue.get('2026-06-01')).toMatchObject({ netCents: 0, refundCount: 3 });
   });
 
+  it('credits an order by amount and takes the credit off the last refunds', async () => {
+    const testApp = createTestApp();
+    const { app, run, settle } = testApp;
+    await stockItems(testApp, { MUG: 10, TEE: 5 });
+    await placeOrder(testApp, 'o-1', [['MUG', 3], ['TEE', 1]], { discountCodes: ['TEN'], coupon: 'FIVE' });
+    await settle();
+    await payOrder(testApp, 'o-1');
+    await settle();
+
+    const credit = { orderId: 'o-1', amountCents: 7_000, reason: 'late delivery', creditId: 'c-1' };
+    await run({ type: 'CreditOrder', payload: credit });
+    await settle();
+    // The credit moves money without moving units, stock or status.
+    expect(app.readModels.orderSummary.get('o-1')).toMatchObject({ status: 'Paid', refundedCents: 7_000 });
+    expect(app.readModels.stockLevels.get('MUG')).toMatchObject({ onHand: 7, available: 7 });
+
+    for (const [refundId, lineId, quantity] of [
+      ['r-1', 'o-1-l1', 3],
+      ['r-2', 'o-1-l2', 1],
+    ] as const) {
+      await run({ type: 'RefundOrderLine', payload: { orderId: 'o-1', lineId, quantity, refundId } });
+    }
+    await settle();
+
+    // 5_463 of goods were worth refunding but only 737 was left to give back.
+    expect(app.readModels.orderSummary.get('o-1')).toMatchObject({ status: 'Refunded', refundedCents: 7_737 });
+    expect(app.readModels.stockLevels.get('MUG')).toMatchObject({ onHand: 10, available: 10 });
+    expect(app.readModels.dailyRevenue.get('2026-06-01')).toMatchObject({ netCents: 0, refundCount: 2 });
+    expect(app.readModels.customerHistory.get('alice')).toMatchObject({ lifetimeSpendCents: 0 });
+  });
+
   it('cancels an order as out of stock when another order took the last units', async () => {
     const testApp = createTestApp();
     const { app, settle } = testApp;

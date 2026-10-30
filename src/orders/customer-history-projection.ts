@@ -10,6 +10,7 @@ export interface CustomerOrder {
   readonly placedAt: string;
   readonly totalCents: Cents;
   readonly paidCents: Cents;
+  /** Money given back: credits plus what unit refunds paid back (§5.4). */
   readonly refundedCents: Cents;
 }
 
@@ -76,7 +77,10 @@ export class CustomerHistoryProjection implements Projection {
         order.status = 'Refunded';
         break;
       case 'OrderLineRefunded':
-        order.refundedCents = cents(order.refundedCents + event.payload.refund.totalCents);
+        order.refundedCents = cents(order.refundedCents + event.payload.paidBackCents);
+        break;
+      case 'OrderCredited':
+        order.refundedCents = cents(order.refundedCents + event.payload.amountCents);
         break;
       default:
         break;
