@@ -17,6 +17,11 @@ export type RefundOrderLine = Command<
   { orderId: string; lineId: string; quantity: number; refundId?: string }
 >;
 
+export type CreditOrder = Command<
+  'CreditOrder',
+  { orderId: string; amountCents: number; reason: string; creditId?: string }
+>;
+
 export type OrderCommand =
   | CreateOrder
   | AddOrderLine
@@ -30,4 +35,5 @@ export type OrderCommand =
   | DeliverOrder
   | CancelOrder
   | ExpireOrderReservation
-  | RefundOrderLine;
+  | RefundOrderLine
+  | CreditOrder;

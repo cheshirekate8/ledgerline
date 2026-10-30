@@ -85,5 +85,9 @@ export function orderCommandHandlers(dependencies: OrderHandlerDependencies): Ha
       change(payload.orderId, context, (order) =>
         order.refundLine(payload.refundId ?? ids.next(), payload.lineId, payload.quantity),
       ),
+    CreditOrder: ({ payload }, context) =>
+      change(payload.orderId, context, (order) =>
+        order.credit(payload.creditId ?? ids.next(), payload.amountCents, payload.reason),
+      ),
   };
 }

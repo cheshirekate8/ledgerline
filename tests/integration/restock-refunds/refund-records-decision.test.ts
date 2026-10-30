@@ -27,7 +27,7 @@ describe('the refund event records the stock decision', () => {
       ['delivered', false],
     ] as const) {
       const event = byOrder[orderId]!;
-      expect(event.version).toBe(2);
+      expect(event.version).toBe(3);
       expect(payloadOf(event)).toMatchObject({
         refundId: `r-${orderId}`,
         lineId: `${orderId}-l1`,

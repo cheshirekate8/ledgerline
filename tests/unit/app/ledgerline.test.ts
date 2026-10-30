@@ -11,14 +11,14 @@ import { TEST_CATALOG_CONFIG } from '../../support/catalog';
 describe('createUpcasterRegistry', () => {
   it('declares every event type at its current version', () => {
     const registry = createUpcasterRegistry();
-    expect(ALL_EVENT_TYPES).toHaveLength(22);
+    expect(ALL_EVENT_TYPES).toHaveLength(23);
     for (const type of ALL_EVENT_TYPES) {
       expect(registry.currentVersion(type)).toBe(EVENT_VERSIONS[type] ?? 1);
     }
-    expect(EVENT_VERSIONS).toEqual({ OrderLineRefunded: 2 });
+    expect(EVENT_VERSIONS).toEqual({ OrderLineRefunded: 3 });
   });
 
-  it('upcasts a v1 OrderLineRefunded as not returning its units to stock', () => {
+  it('upcasts a v1 OrderLineRefunded as not restocking and as fully paid back', () => {
     const registry = createUpcasterRegistry();
     const stored = {
       type: 'OrderLineRefunded',
@@ -28,8 +28,28 @@ describe('createUpcasterRegistry', () => {
 
     const upcast = registry.upcast(stored);
 
-    expect(upcast.version).toBe(2);
-    expect(upcast.payload).toEqual({ ...(stored.payload as object), returnsToStock: false });
+    expect(upcast.version).toBe(3);
+    expect(upcast.payload).toEqual({ ...(stored.payload as object), returnsToStock: false, paidBackCents: 1_000 });
+  });
+
+  it('upcasts a v2 OrderLineRefunded as having paid back its whole prorated total', () => {
+    const registry = createUpcasterRegistry();
+    const stored = {
+      type: 'OrderLineRefunded',
+      version: 2,
+      payload: {
+        refundId: 'r-1',
+        lineId: 'l-1',
+        paymentId: 'p-1',
+        refund: { quantity: 1, totalCents: 1_000 },
+        returnsToStock: true,
+      },
+    } as unknown as StoredEvent;
+
+    const upcast = registry.upcast(stored);
+
+    expect(upcast.version).toBe(3);
+    expect(upcast.payload).toEqual({ ...(stored.payload as object), paidBackCents: 1_000 });
   });
 
   it('lets a future schema version and its upcaster be declared through the hook', () => {

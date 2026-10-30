@@ -1,6 +1,7 @@
 import { Order } from '../../../src/orders/order';
 import {
   CouponAlreadyAppliedError,
+  CreditExceedsRefundableError,
   DuplicateDiscountCodeError,
   EmptyOrderError,
   InvalidOrderTransitionError,
@@ -206,10 +207,11 @@ describe('Order', () => {
           lineId: 'a',
           paymentId: 'p-1',
           refund: { quantity: 1, grossCents: 1_999, discountCents: 200, couponCents: 117, taxCents: 139, totalCents: 1_821 },
+          paidBackCents: 1_821,
         },
       });
       expect(order.refundedQuantity('a')).toBe(1);
-      expect(order.refundedCents).toBe(1_821);
+      expect(order.returnedCents).toBe(1_821);
       expect(order.status).toBe('Paid');
     });
 
@@ -235,7 +237,7 @@ describe('Order', () => {
       order.refundLine('r-2', 'b', 1);
       order.refundLine('r-3', 'a', 2);
       expect(order.status).toBe('Refunded');
-      expect(order.refundedCents).toBe(7_737);
+      expect(order.returnedCents).toBe(7_737);
       expect(order.peekPendingEvents().at(-1)).toMatchObject({
         type: 'OrderRefunded',
         payload: { totalRefundedCents: 7_737 },
@@ -247,25 +249,110 @@ describe('Order', () => {
       expect(() => placed().refundLine('r-1', 'a', 1)).toThrow(OrderNotRefundableError);
     });
 
-    it('records at v2 that only units refunded while Paid return to stock', () => {
+    it('records at v3 that only units refunded while Paid return to stock', () => {
       const paidRefund = paid();
       paidRefund.refundLine('r-1', 'a', 1);
       expect(paidRefund.peekPendingEvents().at(-1)).toMatchObject({
         type: 'OrderLineRefunded',
-        version: 2,
+        version: 3,
         payload: { returnsToStock: true },
       });
 
       const shipped = paid();
       shipped.ship('T');
       shipped.refundLine('r-1', 'a', 1);
-      expect(shipped.peekPendingEvents().at(-1)).toMatchObject({ version: 2, payload: { returnsToStock: false } });
+      expect(shipped.peekPendingEvents().at(-1)).toMatchObject({ version: 3, payload: { returnsToStock: false } });
 
       const delivered = paid();
       delivered.ship('T');
       delivered.deliver();
       delivered.refundLine('r-1', 'a', 1);
-      expect(delivered.peekPendingEvents().at(-1)).toMatchObject({ version: 2, payload: { returnsToStock: false } });
+      expect(delivered.peekPendingEvents().at(-1)).toMatchObject({ version: 3, payload: { returnsToStock: false } });
+    });
+  });
+
+  describe('credits', () => {
+    it('gives money back without touching units or status', () => {
+      const order = paid();
+      order.credit('c-1', 500, '  late delivery  ');
+      expect(order.peekPendingEvents().at(-1)).toMatchObject({
+        type: 'OrderCredited',
+        version: 1,
+        payload: { creditId: 'c-1', paymentId: 'p-1', amountCents: 500, reason: 'late delivery' },
+      });
+      expect(order.status).toBe('Paid');
+      expect(order.returnedCents).toBe(500);
+      expect(order.refundableCents).toBe(7_237);
+      expect(order.refundedQuantity('a')).toBe(0);
+    });
+
+    it('is allowed wherever a unit refund is, and nowhere else', () => {
+      const shipped = paid();
+      shipped.ship('T');
+      shipped.credit('c-1', 100, 'sorry');
+      expect(shipped.status).toBe('Shipped');
+
+      const delivered = paid();
+      delivered.ship('T');
+      delivered.deliver();
+      delivered.credit('c-1', 100, 'sorry');
+      expect(delivered.status).toBe('Delivered');
+
+      expect(() => placed().credit('c-1', 100, 'sorry')).toThrow(OrderNotRefundableError);
+    });
+
+    it('validates its amount and reason, and checks the status first', () => {
+      const order = paid();
+      expect(() => order.credit('c-1', 0, 'sorry')).toThrow(ValidationError);
+      expect(() => order.credit('c-1', -5, 'sorry')).toThrow(ValidationError);
+      expect(() => order.credit('c-1', 1.5, 'sorry')).toThrow(ValidationError);
+      expect(() => order.credit('c-1', 100, '   ')).toThrow(ValidationError);
+      // Above the balance and not whole cents: the input is checked before the balance.
+      expect(() => order.credit('c-1', 7_737.5, 'sorry')).toThrow(ValidationError);
+
+      const cancelled = placed();
+      cancelled.cancel('customer-request');
+      expect(() => cancelled.credit('c-1', 0, 'sorry')).toThrow(OrderNotRefundableError);
+      expect(types(order).filter((type) => type === 'OrderCredited')).toHaveLength(0);
+    });
+
+    it('refuses a credit larger than what is left to give back', () => {
+      const order = paid();
+      order.refundLine('r-1', 'a', 1);
+      expect(() => order.credit('c-1', 5_917, 'too much')).toThrow(CreditExceedsRefundableError);
+      order.credit('c-1', 5_916, 'the rest');
+      expect(order.refundableCents).toBe(0);
+      expect(() => order.credit('c-2', 1, 'one more')).toThrow(CreditExceedsRefundableError);
+    });
+
+    it('shares its refund ids with unit refunds, either way round', () => {
+      const order = paid();
+      order.credit('x', 500, 'goodwill');
+      order.refundLine('x', 'a', 1);
+      expect(order.refundedQuantity('a')).toBe(0);
+      order.refundLine('y', 'a', 1);
+      order.credit('y', 200, 'goodwill');
+      expect(types(order).filter((type) => type === 'OrderCredited')).toHaveLength(1);
+      // A repeated id is a no-op even when the amount no longer fits the balance.
+      order.credit('x', 7_737, 'goodwill');
+      expect(types(order).filter((type) => type === 'OrderCredited')).toHaveLength(1);
+    });
+
+    it('pays a later refund back only what the balance has left', () => {
+      const order = paid();
+      order.credit('c-1', 7_000, 'nearly everything');
+      order.refundLine('r-1', 'a', 1);
+      expect(order.peekPendingEvents().at(-1)).toMatchObject({
+        payload: { refund: { totalCents: 1_821 }, paidBackCents: 737, returnsToStock: true },
+      });
+      order.refundLine('r-2', 'a', 2);
+      order.refundLine('r-3', 'b', 1);
+      expect(order.status).toBe('Refunded');
+      expect(order.peekPendingEvents().at(-1)).toMatchObject({
+        type: 'OrderRefunded',
+        payload: { totalRefundedCents: 7_737 },
+      });
+      expect(order.refundableCents).toBe(0);
     });
   });
 

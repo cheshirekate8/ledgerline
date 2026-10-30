@@ -134,6 +134,7 @@ cancels unpaid orders whose reservation window has passed.
 | `ShipOrder` / `DeliverOrder` | `orderId`, `trackingNumber` / `orderId` |
 | `CancelOrder` | `orderId`, `reason` (`customer-request` or `out-of-stock`) |
 | `RefundOrderLine` | `orderId`, `lineId`, `quantity` (optional `refundId`) |
+| `CreditOrder` | `orderId`, `amountCents`, `reason` (optional `creditId`) |
 | `RegisterInventoryItem` / `ReceiveStock` | `sku`, `name`, optional `initialQuantity` / `sku`, `quantity` |
 
 The process managers send the rest themselves: `ReserveStock`, `ReleaseStock`,
@@ -142,8 +143,8 @@ The process managers send the rest themselves: `ReserveStock`, `ReleaseStock`,
 
 Broken rules are reported as typed errors that extend `DomainError`, each with a
 stable `code`: `InvalidOrderTransitionError`, `RefundExceedsPaidError`,
-`ReservationExpiredError`, `OrderAwaitingStockError`, `UnknownTaxRegionError`
-and so on.
+`CreditExceedsRefundableError`, `ReservationExpiredError`,
+`OrderAwaitingStockError`, `UnknownTaxRegionError` and so on.
 
 ## Business rules
 
@@ -226,6 +227,39 @@ line knows exactly what was paid for it.
   `StockReturned` event naming the order and the refund, never as
   `StockReceived`, so restocked units can be told apart from new deliveries.
 
+### Credits: money back without returning goods
+
+- A **credit** gives money back on an order without refunding any units, for
+  example "5.00 off for the late delivery": `CreditOrder` with an `amountCents`
+  and a `reason`. It is allowed in the same statuses as a unit refund (Paid,
+  Shipped, Delivered) and refused elsewhere with `OrderNotRefundableError`. The
+  amount must be a positive whole number of cents and the reason non-empty once
+  trimmed; anything else is a `ValidationError`.
+- A credit **changes neither the order's status nor stock**. An order that has
+  been credited its whole balance stays Paid, Shipped or Delivered until its
+  units are refunded.
+- **The money returned on an order never exceeds what was paid.** Credits and
+  unit refunds draw on one balance — paid minus everything returned so far, which
+  the order works out from its own events. A credit larger than that balance
+  throws `CreditExceedsRefundableError` and records nothing.
+- **A credit comes off the last refunds.** A later unit refund still prorates as
+  above, but pays back only what the balance has left. The `OrderLineRefunded`
+  event keeps the prorated `refund` breakdown, which says what the units were
+  worth, and carries `paidBackCents`, the money actually returned. A refund whose
+  balance is exhausted still refunds its units, still restocks them and still
+  moves the order to Refunded when it covers the last unit, but returns no money,
+  so a fully refunded order has returned exactly what was paid.
+- Only money that moves reaches the payment: the payment is refunded a credit's
+  `amountCents` under the `creditId` and with the credit's reason, and a unit
+  refund's `paidBackCents` under its `refundId`. A refund that pays back nothing
+  sends no payment refund at all.
+- **Credits and unit refunds share the order's refund ids.** A `CreditOrder` or
+  `RefundOrderLine` carrying an id the order has already used, by either kind, is
+  a no-op before any other check.
+- The order summary's and the customer history's `refundedCents` count the money
+  actually returned: credits plus `paidBackCents`. Daily revenue follows the
+  payment, so it already counts both.
+
 ### Order states
 
 The happy path is Draft → Placed → Paid → Shipped → Delivered. An order can be
@@ -294,9 +328,12 @@ republishing at any time is safe.
   state schema version is ignored, and an aggregate loaded from a snapshot is
   identical to one replayed from scratch.
 - **Event versions.** Every event has a `type` and a `version`. Every schema is
-  at v1 except `OrderLineRefunded`, which is at **v2** since it gained
-  `returnsToStock`; a stored v1 refund is upcast with `returnsToStock: false`,
-  because no refund restocked before that rule existed. The `UpcasterRegistry`
+  at v1 except `OrderLineRefunded`, which is at **v3**: it moved to v2 when it
+  gained `returnsToStock` and to v3 when it gained `paidBackCents`. A stored v1
+  refund is upcast with `returnsToStock: false`, because no refund restocked
+  before that rule existed, and a stored v1 or v2 refund is upcast with
+  `paidBackCents` equal to its prorated `refund.totalCents`, because every refund
+  paid back its full total before credits existed. The `UpcasterRegistry`
   lifts an older stored event to the current version one step at a time as it is
   read, and refuses an unknown type, a version newer than it understands, or a
   gap in the upcaster chain. A further schema change declares the new version and

@@ -68,8 +68,41 @@ describe('PaymentProcess', () => {
     await process.handle(refunded);
     await process.handle(refunded);
     const payment = payments.load('p-1')!;
-    expect(payment.refundedCents).toBe((refunded.payload as { refund: { totalCents: number } }).refund.totalCents);
+    expect(payment.refundedCents).toBe((refunded.payload as { paidBackCents: number }).paidBackCents);
     expect(payment.status).toBe('partially-refunded');
+  });
+
+  it('refunds a credit on the order payment under the credit id, with its reason', async () => {
+    const { process, capture, lastEvent, payments, run } = await setup();
+    await capture();
+    await process.handle(lastEvent('PaymentCaptured'));
+    const credit = { orderId: 'o-1', amountCents: 500, reason: 'late delivery', creditId: 'c-1' };
+    await run({ type: 'CreditOrder', payload: credit });
+
+    const credited = lastEvent('OrderCredited');
+    await process.handle(credited);
+    await process.handle(credited);
+    expect(payments.load('p-1')!.refundedCents).toBe(500);
+    expect(lastEvent('PaymentRefunded').payload).toMatchObject({
+      refundId: 'c-1',
+      amountCents: 500,
+      reason: 'late delivery',
+    });
+  });
+
+  it('sends no payment refund for a unit refund that pays nothing back', async () => {
+    const { process, capture, lastEvent, payments, run, store, total } = await setup();
+    await capture();
+    await process.handle(lastEvent('PaymentCaptured'));
+    const credit = { orderId: 'o-1', amountCents: total, reason: 'all of it', creditId: 'c-1' };
+    await run({ type: 'CreditOrder', payload: credit });
+    await process.handle(lastEvent('OrderCredited'));
+    await run({ type: 'RefundOrderLine', payload: { orderId: 'o-1', lineId: 'o-1-l1', quantity: 3, refundId: 'r-1' } });
+
+    await process.handle(lastEvent('OrderLineRefunded'));
+
+    expect(store.readAll().filter((event) => event.type === 'PaymentRefunded')).toHaveLength(1);
+    expect(payments.load('p-1')!.refundedCents).toBe(total);
   });
 
   it('ignores events it does not act on', async () => {

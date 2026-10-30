@@ -2,6 +2,8 @@
 // stock. v1-history.ndjson holds such a log: MUG stocked
 // with 5, order "legacy" paid for 3, then 1 unit refunded as a version 1 OrderLineRefunded
 // while the order was Paid. Before this rule existed no refund restocked, so on-hand is 2.
+// Subscribers receive the stored v1 refund upcast to the current version, with
+// returnsToStock false.
 import { copyFileSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -47,7 +49,7 @@ describe('replaying v1 refund history', () => {
 
     const upcast = delivered.filter((event) => event.type === 'OrderLineRefunded');
     expect(upcast).toHaveLength(1);
-    expect(upcast[0]!.version).toBe(2);
+    expect(upcast[0]!.version).toBe(3);
     expect(payloadOf(upcast[0]!)).toMatchObject({ refundId: 'r-legacy-1', returnsToStock: false });
 
     expect(store.events('StockReturned')).toEqual([]);

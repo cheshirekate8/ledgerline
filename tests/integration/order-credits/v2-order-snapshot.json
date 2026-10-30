@@ -1,0 +1,61 @@
+{
+  "aggregateType": "order",
+  "aggregateId": "legacy",
+  "sequence": 6,
+  "schemaVersion": 1,
+  "takenAt": "2026-06-01T09:00:00.000Z",
+  "state": {
+    "created": true,
+    "customerId": "alice",
+    "shippingRegion": "US-OR",
+    "status": "Paid",
+    "lines": [
+      {
+        "lineId": "legacy-l1",
+        "sku": "MUG",
+        "quantity": 3,
+        "unitPriceCents": 1000
+      }
+    ],
+    "discountCodes": [],
+    "coupon": null,
+    "pricing": {
+      "lines": [
+        {
+          "lineId": "legacy-l1",
+          "sku": "MUG",
+          "quantity": 3,
+          "unitPriceCents": 1000,
+          "grossCents": 3000,
+          "discountCents": 0,
+          "netCents": 3000,
+          "couponCents": 0,
+          "taxCents": 0,
+          "totalCents": 3000
+        }
+      ],
+      "discountCodes": [],
+      "subtotalCents": 3000,
+      "discountCents": 0,
+      "discountedSubtotalCents": 3000,
+      "couponCents": 0,
+      "taxableCents": 3000,
+      "taxRateBasisPoints": 0,
+      "taxCents": 0,
+      "totalCents": 3000
+    },
+    "reservationExpiresAt": "2026-06-01T09:15:00.000Z",
+    "stockReserved": true,
+    "paymentId": "pay-legacy",
+    "paidCents": 3000,
+    "refundedUnits": {
+      "legacy-l1": 1
+    },
+    "refundedCents": 1000,
+    "refundIds": [
+      "r-legacy-1"
+    ],
+    "cancellationReason": null,
+    "trackingNumber": null
+  }
+}

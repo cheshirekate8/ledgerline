@@ -16,6 +16,7 @@ export interface OrderSummary {
   readonly couponCents: Cents;
   readonly taxCents: Cents;
   readonly totalCents: Cents;
+  /** Money given back: credits plus what unit refunds paid back (§5.4). */
   readonly refundedCents: Cents;
   readonly stockReserved: boolean;
   readonly reservationExpiresAt: string | null;
@@ -90,7 +91,10 @@ export class OrderSummaryProjection implements Projection {
         Object.assign(summary, { status: 'Cancelled', closedAt: at, cancellationReason: event.payload.reason });
         break;
       case 'OrderLineRefunded':
-        summary.refundedCents = cents(summary.refundedCents + event.payload.refund.totalCents);
+        summary.refundedCents = cents(summary.refundedCents + event.payload.paidBackCents);
+        break;
+      case 'OrderCredited':
+        summary.refundedCents = cents(summary.refundedCents + event.payload.amountCents);
         break;
       case 'OrderRefunded':
         Object.assign(summary, { status: 'Refunded', closedAt: at });

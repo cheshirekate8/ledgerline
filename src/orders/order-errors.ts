@@ -129,6 +129,22 @@ export class OrderNotRefundableError extends DomainError {
   }
 }
 
+/**
+ * Raised when a credit asks for more than the order has left to give back.
+ * Credits and unit refunds draw on one balance (§5.4).
+ */
+export class CreditExceedsRefundableError extends DomainError {
+  readonly code = 'CREDIT_EXCEEDS_REFUNDABLE';
+
+  constructor(
+    readonly orderId: string,
+    readonly requestedCents: Cents,
+    readonly refundableCents: Cents,
+  ) {
+    super(`Order ${orderId} has ${refundableCents} cents left to give back, ${requestedCents} cents requested`);
+  }
+}
+
 export class RefundExceedsPaidError extends DomainError {
   readonly code = 'REFUND_EXCEEDS_PAID';
 

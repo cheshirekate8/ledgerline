@@ -6,7 +6,7 @@ import { StoredEvent } from '../../shared/events/domain-event';
 import { Logger, silentLogger } from '../../shared/logger';
 import { EventSubscriber } from '../../shared/messaging/event-dispatcher';
 import { OrderCommand } from '../order-commands';
-import { ORDER_AGGREGATE, OrderEvent, OrderLineRefunded } from '../order-events';
+import { ORDER_AGGREGATE, OrderCredited, OrderEvent, OrderLineRefunded } from '../order-events';
 import { causedBy } from './fulfillment-process';
 
 export const COMPENSATION_REFUND_REASON = 'order-not-payable';
@@ -15,8 +15,9 @@ export const COMPENSATION_REFUND_REASON = 'order-not-payable';
  * Connects payments and orders. A captured payment marks its order paid;
  * if the order can no longer accept it (it expired, was cancelled or was
  * already paid by another payment) the payment is refunded in full rather
- * than kept. A refunded order line refunds the matching amount on the
- * order's payment.
+ * than kept. A refunded order line refunds what it paid back and a credit
+ * refunds its amount on the order's payment: only money that moves reaches
+ * the payment, so a refund that pays back nothing sends no refund (§5.4).
  */
 export class PaymentProcess implements EventSubscriber {
   readonly name = 'order-payments';
@@ -34,6 +35,9 @@ export class PaymentProcess implements EventSubscriber {
     }
     if (event.type === 'OrderLineRefunded') {
       return this.refundPayment(event as StoredEvent<OrderLineRefunded>);
+    }
+    if (event.type === 'OrderCredited') {
+      return this.refundCredit(event as StoredEvent<OrderCredited>);
     }
     return undefined;
   }
@@ -67,11 +71,25 @@ export class PaymentProcess implements EventSubscriber {
   }
 
   private async refundPayment(event: StoredEvent<OrderLineRefunded>): Promise<void> {
-    const { paymentId, refundId, refund, lineId } = event.payload;
+    const { paymentId, refundId, paidBackCents, lineId } = event.payload;
+    if (paidBackCents === 0) {
+      return;
+    }
     await this.commands.execute({
       type: 'RefundPayment',
       idempotencyKey: `${event.eventId}:refund-payment`,
-      payload: { paymentId, refundId, amountCents: refund.totalCents, reason: `line ${lineId} refunded` },
+      payload: { paymentId, refundId, amountCents: paidBackCents, reason: `line ${lineId} refunded` },
+      ...causedBy(event),
+    });
+  }
+
+  /** A credit's own id is its refund id on the payment, so repeating it refunds once. */
+  private async refundCredit(event: StoredEvent<OrderCredited>): Promise<void> {
+    const { paymentId, creditId, amountCents, reason } = event.payload;
+    await this.commands.execute({
+      type: 'RefundPayment',
+      idempotencyKey: `${event.eventId}:refund-payment`,
+      payload: { paymentId, refundId: creditId, amountCents, reason },
       ...causedBy(event),
     });
   }
