@@ -128,6 +128,31 @@ describe('WorkerPool', () => {
     expect(first.handled).toBe(1);
   });
 
+  it('does not count a completion whose lease was reclaimed by another consumer', async () => {
+    const clock = new FixedClock(0);
+    const sink = new MemoryLogSink();
+    const queue = new InProcessQueue<string>({ clock, ids: new SeededIdGenerator(5), visibilityTimeoutMs: 1_000 });
+    const pool = new WorkerPool<string>({
+      queue,
+      concurrency: 1,
+      logger: new JsonLogger({ sink: sink.write, clock }),
+      handler: async (_body, message) => {
+        if (message.deliveryCount === 1) {
+          clock.advance(1_000);
+          expect(queue.hasDeliverable()).toBe(false);
+          clock.advance(100);
+          const redelivery = queue.lease()!;
+          expect(redelivery.message.deliveryCount).toBe(2);
+          queue.ack(redelivery.leaseId);
+        }
+      },
+    });
+    queue.enqueue('slow');
+    expect(await pool.drain()).toEqual({ handled: 0, retried: 0, deadLettered: 0 });
+    expect(sink.lines).toEqual([]);
+    expect(queue.pendingCount + queue.inFlightCount).toBe(0);
+  });
+
   it('requires a positive concurrency', () => {
     expect(() => setup(() => undefined, 0)).toThrow(RangeError);
   });

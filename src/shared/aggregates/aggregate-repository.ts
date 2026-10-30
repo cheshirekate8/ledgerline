@@ -37,10 +37,6 @@ export class AggregateRepository<TState, TEvent extends EventData, A extends Agg
     this.schemaVersion = options.snapshotSchemaVersion ?? 1;
   }
 
-  get aggregateType(): string {
-    return this.options.aggregateType;
-  }
-
   /** Returns the aggregate, or undefined if its stream has no events. */
   load(id: string): A | undefined {
     const { aggregateType, store, upcasters } = this.options;
