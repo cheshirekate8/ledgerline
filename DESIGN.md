@@ -1,0 +1,165 @@
+# DESIGN.md — ledgerline
+
+The decisions behind ledgerline and why they were made. `README.md` says *how* the
+service behaves; this file says *why it behaves that way* and what was rejected. It is
+amended only through the change log at the bottom: when reality and this document
+disagree, amend the document and record why, never silently drift.
+
+Every pipeline task cites the section of this file it implements (`design-ref`). A task
+that cites nothing is scope creep.
+
+## 1. Purpose and scope
+
+An order and inventory service for a small online store that can be trusted with money
+and stock without a database: every state change is an event in an append-only log, and
+every read model can be rebuilt from that log. It runs offline, in one process, with no
+runtime dependencies.
+
+Out of scope, deliberately: multi-currency, a real payment provider, multiple processes
+writing one event store, and a network API. Each would change the guarantees in §2.
+
+## 2. Invariants
+
+These hold for every change. A task that needs one broken is a design change, not an
+implementation detail.
+
+### 2.1 Money is integer cents
+
+No floating-point value ever touches an amount. Rates are integer basis points, and
+every operation that divides money names its rounding mode. *Why:* rounding drift in a
+ledger is invisible until a refund or a daily total is a cent off, and then it cannot
+be traced.
+
+### 2.2 Determinism
+
+Time and identifiers are injected. Given a fixed clock and a seeded id generator, the
+same commands produce a byte-identical event log and log output. *Why:* it makes every
+scenario test exact, and it makes a production incident replayable.
+
+### 2.3 Events are facts
+
+The event store is append-only and stored events are never rewritten. An event's
+payload shape is fixed for its `version`; a new shape is a new version, and older
+stored events are upcast on read. *Why:* the log is the only source of truth, so a
+change that rewrites it destroys the evidence of what happened.
+
+### 2.4 Exactly-once effects over at-least-once delivery
+
+Delivery is at-least-once, so every command is idempotent on its key and every reaction
+to an event derives its command keys from that event. *Why:* this is the only way to get
+exactly-once *effects* without distributed transactions.
+
+## 3. Architecture
+
+Commands are applied synchronously: load the aggregate by replaying its stream, decide,
+append with an optimistic concurrency check. Read models and process managers react
+asynchronously, through an in-process queue that delivers each aggregate's events to
+each subscriber in order.
+
+### 3.1 Process managers, not cross-aggregate transactions
+
+An order, its stock and its payment are separate aggregates. They are coordinated by
+two process managers — fulfillment (orders ↔ inventory) and payments (orders ↔
+payments) — rather than by one handler writing several streams. *Rejected:* a single
+handler that reserves stock and places the order together; with no transactions, a
+failure halfway leaves stock reserved for an order that does not exist.
+
+### 3.2 A process manager acts on what the event recorded
+
+A process manager handles an event some time after it happened, and by then the
+aggregate may have moved on. Any decision that depends on the aggregate's state *at the
+time of the event* is therefore made by the aggregate and recorded in the event itself;
+the process manager never reconstructs it from current state.
+
+## 4. Orders
+
+### 4.1 Lifecycle
+
+Draft → Placed → Paid → Shipped → Delivered, with Cancelled reachable before payment
+and Refunded after it. Invalid transitions throw typed errors. Expiry is a cancellation
+with reason `reservation-expired`, not a separate state, so the set of states stays the
+one a store owner already thinks in.
+
+### 4.2 Payable only once stock is held
+
+An order accepts payment only after every SKU on it is reserved. *Rejected:* letting
+payment race the reservation; a paid order that then turns out to be out of stock needs
+a refund the customer never asked for.
+
+### 4.3 Payments the order cannot accept are refunded
+
+A payment captured for an order that has since expired, or that another payment already
+paid, is refunded in full by the payments process manager. Money is never kept for an
+order that will not be fulfilled.
+
+## 5. Pricing and refunds
+
+### 5.1 Order of operations
+
+Per-line percentage discounts (half to even), then a fixed coupon on the discounted
+subtotal (capped at zero), then regional tax on what remains (half up, once per order).
+Coupon and tax are allocated back to lines by largest remainder so that line totals sum
+exactly to the order total.
+
+### 5.2 Refunds are per unit
+
+A refund names a line and a quantity of units. Each line is split into units whose
+discount, coupon and tax shares are non-negative and sum exactly to the line, so partial
+refunds prorate correctly and can never exceed what was paid. *Rejected for now:*
+refunds by arbitrary amount (see `docs/IDEAS.md`), which need a separate rule for how a
+credit interacts with later unit refunds.
+
+### 5.3 Refunded units that never shipped go back into stock
+
+When units are refunded while the order is **Paid** — the stock has been confirmed out
+of inventory but the goods have not left — those units return to the SKU's stock and are
+available to sell again. Refunds on **Shipped** or **Delivered** orders do not restock:
+the goods are with the carrier or the customer, and if they come back they are received
+with `ReceiveStock` when they physically arrive.
+
+- *Rejected:* restocking on every refund. It would create stock for goods that were
+  never returned.
+- *Rejected:* deciding in the fulfillment process from the order's current status. By
+  the time the process handles the refund the order may have shipped, so it would get
+  the answer wrong (§3.2).
+- **The order records the decision.** At refund time the order states, in the refund
+  event, whether the refunded units return to stock. This changes the payload of
+  `OrderLineRefunded`, so it moves to version 2 (§2.3). Version 1 events are upcast as
+  *not* returning to stock, because before this rule existed no refund restocked; replay
+  must not invent stock for history.
+- **Inventory records the return as its own event**, naming the order and the refund,
+  distinct from `StockReceived`, so restocked units can be told apart from new
+  deliveries.
+- **Exactly once (§2.4):** a redelivered refund event or a repeated command returns the
+  units once.
+
+## 6. Messaging and persistence
+
+### 6.1 Ordering per aggregate, concurrency across aggregates
+
+The queue groups deliveries by subscriber and aggregate. A failing delivery holds back
+later events of the same aggregate for that subscriber, and projections refuse to skip a
+gap in a stream. *Rejected:* a single global order, which would serialise the whole
+store behind one slow handler.
+
+### 6.2 The queue is in memory
+
+Queued work is lost when the process stops; `republish()` re-drives it after a restart,
+which is safe because of §2.4. Persisting the queue is a parked idea, not a gap in this
+design.
+
+### 6.3 Snapshots are a cache
+
+Off by default, versioned by state schema, and never required for correctness: an
+aggregate loaded from a snapshot is identical to one replayed from scratch.
+
+## 7. Change log
+
+Rows are chronological, oldest first; append new rows at the bottom. A row is identified
+by the slug in its `Ref` column: a pipeline task's issue id, or a short kebab-case name
+for a planning session. Cite a row as change-log row followed by its slug in backticks.
+
+| Date | Ref | Change | Why |
+|---|---|---|---|
+| 2026-10-30 | `initial-design` | Recorded the decisions made while building the service: §1–§4, §5.1–§5.2 and §6 | The README described behaviour but not the reasons or the rejected alternatives, and pipeline tasks need a design section to cite |
+| 2026-10-30 | `restock-unshipped-refunds` | Added §3.2 (process managers act on what the event recorded) and §5.3 (refunded units of a paid, unshipped order return to stock; `OrderLineRefunded` moves to v2) | First planning session. Refunded but unshipped stock was stranded until someone ran `ReceiveStock` by hand |

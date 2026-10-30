@@ -41,9 +41,6 @@ date. Optional, only when true: `Blocked on:` (a change-log row or issue id) and
 - **Persist the message queue** — queued work is lost when the process stops, and today
   recovery depends on someone remembering to call `republish()` after a restart.
   2026-10-29. Related: README "Delivery guarantees".
-- **Restock refunded units that never shipped** — refunding a Paid order returns the money
-  but not the stock, so an item refunded before dispatch can never be sold again without
-  a manual `ReceiveStock`. 2026-10-29.
 - **Refund by amount as well as by units** — goodwill credits ("$5 off for the late
   delivery") have no home today, because refunds are per unit only. 2026-10-29.
 - **Find expiry candidates without loading every order** — `expireReservations()` replays
@@ -56,6 +53,7 @@ date. Optional, only when true: `Blocked on:` (a change-log row or issue id) and
 
 | Date | Idea | Became |
 |---|---|---|
+| 2026-10-30 | Restock refunded units that never shipped | DESIGN.md §5.3 (change-log row `restock-unshipped-refunds`), issue `ledgerline-kml` |
 
 ## Dropped
 

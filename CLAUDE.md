@@ -8,6 +8,8 @@ append-only event log, in memory or in a newline-delimited JSON file.
 - **Intent and rules:** `README.md` — architecture, every business rule, and the
   delivery guarantees. Code that disagrees with it is a bug or a README amendment, never
   a silent third option.
+- **Decisions and why:** `DESIGN.md` — invariants, rejected alternatives, and the section
+  each task implements (its `design-ref`). Amended only through its change log.
 - **Work:** tasks are Beads issues (prefix `ledgerline-`). Inside a pipeline run, your
   task is `/workspace/.run/issue.md`, and the frozen tests in
   `tests/acceptance/<issue-id>/` are the proof of done. If the issue and the README
