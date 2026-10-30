@@ -9,7 +9,7 @@ import { createUpcasterRegistry } from '../../src/app/ledgerline-commands';
 import { InMemorySnapshotStore } from '../../src/shared/snapshots/snapshot-store';
 import { ProjectionHost } from '../../src/shared/projections/projection';
 import { runStoreScenario } from '../support/scenario';
-import { createTestApp, readModelState } from '../support/test-app';
+import { createTestApp, placeOrder, readModelState, stockItems } from '../support/test-app';
 
 describe('replaying event streams', () => {
   it('produces the expected read models for the store scenario', async () => {
@@ -119,10 +119,31 @@ describe('the JSON file event store', () => {
     const after = createTestApp({ persistence: { kind: 'json-file', path }, clock: before.clock, seed: 99 });
     expect(readModelState(after.app)).toEqual(state);
 
+    after.app.republish();
+    await after.settle();
+    expect(after.app.store.readAll()).toHaveLength(eventCount);
+    expect(readModelState(after.app)).toEqual(state);
+
     const shipKey = before.app.store
       .readAll()
       .find((event) => event.type === 'OrderShipped')!.metadata.idempotencyKey!;
-    const duplicate = await after.run({ type: 'ShipOrder', payload: { orderId: 'o-1', trackingNumber: 'TRK-1' } }, shipKey);
-    expect(duplicate.duplicate).toBe(true);
+    const ship = { type: 'ShipOrder', payload: { orderId: 'o-1', trackingNumber: 'TRK-1' } } as const;
+    expect((await after.run(ship, shipKey)).duplicate).toBe(true);
+  });
+
+  it('finishes work that was queued but not processed when the service stopped', async () => {
+    const path = join(directory, 'events.ndjson');
+    const before = createTestApp({ persistence: { kind: 'json-file', path, durable: false } });
+    await stockItems(before, { MUG: 5 });
+    await placeOrder(before, 'o-1', [['MUG', 2]]);
+    expect(before.app.queue.pendingCount).toBeGreaterThan(0);
+    before.app.close();
+
+    const after = createTestApp({ persistence: { kind: 'json-file', path }, clock: before.clock, seed: 99 });
+    expect(after.app.readModels.orderSummary.get('o-1')).toMatchObject({ status: 'Placed', stockReserved: false });
+    after.app.republish();
+    await after.settle();
+    expect(after.app.readModels.orderSummary.get('o-1')!.stockReserved).toBe(true);
+    expect(after.app.readModels.stockLevels.get('MUG')!.reserved).toBe(2);
   });
 });
