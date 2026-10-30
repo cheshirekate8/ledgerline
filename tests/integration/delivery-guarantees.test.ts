@@ -1,5 +1,9 @@
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { OrderSummaryProjection } from '../../src/orders/order-summary-projection';
 import { createUpcasterRegistry } from '../../src/app/ledgerline-commands';
+import { FixedClock } from '../../src/shared/clock';
 import { StoredEvent } from '../../src/shared/events/domain-event';
 import { ProjectionHost } from '../../src/shared/projections/projection';
 import { runStoreScenario } from '../support/scenario';
@@ -121,6 +125,82 @@ describe('at-least-once delivery', () => {
     await placeOrder(testApp, 'o-1', [['MUG', 1]]);
     await testApp.settle();
     expect(seen).toEqual(['o-1#1', 'o-1#2', 'o-1#3', 'o-1#4']);
+  });
+});
+
+describe('resuming after a restart', () => {
+  let directory: string;
+
+  beforeEach(() => {
+    directory = mkdtempSync(join(tmpdir(), 'ledgerline-resume-'));
+  });
+
+  afterEach(() => {
+    rmSync(directory, { recursive: true, force: true });
+  });
+
+  /** A subscriber over a JSON-file log in `directory`, with a `seed` of its own. */
+  const open = (seed: number, clock?: FixedClock) => {
+    const path = join(directory, 'events.ndjson');
+    const testApp = createTestApp({
+      seed,
+      persistence: { kind: 'json-file', path, durable: false },
+      ...(clock === undefined ? {} : { clock }),
+    });
+    const seen: string[] = [];
+    let broken = false;
+    testApp.app.subscribe({
+      name: 'mailer',
+      aggregateTypes: ['order'],
+      handle: (event: StoredEvent) => {
+        if (broken) {
+          throw new Error('template missing');
+        }
+        seen.push(`${event.aggregateId}#${event.sequence}`);
+      },
+    });
+    return { ...testApp, seen, break: (value: boolean) => void (broken = value) };
+  };
+
+  it('gives a named subscriber exactly what it had not finished, in stream order', async () => {
+    const before = open(42);
+    await stockItems(before, { MUG: 10 });
+    await placeOrder(before, 'o-1', [['MUG', 1]]);
+    await before.settle();
+    expect(before.seen).toEqual(['o-1#1', 'o-1#2', 'o-1#3', 'o-1#4']);
+    await before.run({ type: 'CancelOrder', payload: { orderId: 'o-1', reason: 'customer-request' } }, 'cancel-1');
+
+    const after = open(99, before.clock);
+    await after.settle();
+    expect(after.seen).toEqual(['o-1#5']);
+  });
+
+  it('keeps a dead letter dead, with its id, until it is redriven', async () => {
+    const before = open(42);
+    before.break(true);
+    await stockItems(before, { MUG: 10 });
+    await before.run({ type: 'CreateOrder', payload: { orderId: 'o-1', customerId: 'alice', shippingRegion: 'US-CA' } });
+    await before.settle();
+    const messageId = before.app.deadLetters.list()[0]!.message.id;
+    expect(before.app.deadLetters.size).toBe(1);
+
+    const after = open(99, before.clock);
+    const [restored] = after.app.deadLetters.list();
+    expect(restored!.message.id).toBe(messageId);
+    expect(restored).toMatchObject({ error: 'template missing', message: { body: { subscriber: 'mailer' } } });
+
+    // A dead letter waits for a redrive; it is never retried on its own.
+    await after.settle();
+    expect(after.seen).toEqual([]);
+    expect(after.app.redrive(messageId)).toBe(true);
+    await after.settle();
+    expect(after.seen).toEqual(['o-1#1']);
+
+    // Having succeeded, it counts as finished and is not delivered again.
+    const later = open(123, after.clock);
+    await later.settle();
+    expect(later.app.deadLetters.list()).toEqual([]);
+    expect(later.seen).toEqual([]);
   });
 });
 

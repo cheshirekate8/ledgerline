@@ -25,9 +25,16 @@ import { JsonFileEventStore } from '../shared/events/json-file-event-store';
 import { RandomIdGenerator } from '../shared/ids';
 import { JsonLogger } from '../shared/logger';
 import { DeadLetterQueue } from '../shared/messaging/dead-letter-queue';
+import { DurableDeadLetterQueue } from '../shared/messaging/durable-dead-letters';
 import { EventDelivery, EventDispatcher, EventSubscriber } from '../shared/messaging/event-dispatcher';
 import { InProcessQueue } from '../shared/messaging/in-process-queue';
 import { retryPolicy } from '../shared/messaging/retry-policy';
+import {
+  FileSubscriberProgress,
+  noSubscriberProgress,
+  progressPathFor,
+  SubscriberProgress,
+} from '../shared/messaging/subscriber-progress';
 import { DrainReport, WorkerPool } from '../shared/messaging/worker-pool';
 import { ProjectionHost } from '../shared/projections/projection';
 import { snapshotPolicy } from '../shared/snapshots/snapshot-policy';
@@ -78,7 +85,9 @@ export function createLedgerline(options: LedgerlineOptions): Ledgerline {
   const clock = options.clock ?? new SystemClock();
   const ids = options.ids ?? new RandomIdGenerator();
   const logger = options.logger ?? new JsonLogger({ clock });
-  const store = createEventStore(options.persistence ?? { kind: 'memory' });
+  const persistence = options.persistence ?? { kind: 'memory' };
+  const store = createEventStore(persistence);
+  const progress = createSubscriberProgress(persistence, store);
   const upcasters = createUpcasterRegistry(options.configureUpcasters);
   const catalog = toCatalog(options.catalog);
 
@@ -109,7 +118,8 @@ export function createLedgerline(options: LedgerlineOptions): Ledgerline {
     .registerAll(inventoryCommandHandlers(inventory))
     .registerAll(paymentCommandHandlers(payments, createPayableOrderLookup(orders, clock)));
 
-  const deadLetters = new DeadLetterQueue<EventDelivery>();
+  const deadLetters = new DurableDeadLetterQueue(progress);
+  deadLetters.restore(store.readAll());
   const queue = new InProcessQueue<EventDelivery>({
     clock,
     ids,
@@ -117,7 +127,7 @@ export function createLedgerline(options: LedgerlineOptions): Ledgerline {
     retry: retryPolicy(options.retry),
     ...(options.visibilityTimeoutMs === undefined ? {} : { visibilityTimeoutMs: options.visibilityTimeoutMs }),
   });
-  const dispatcher = new EventDispatcher(store, queue, upcasters);
+  const dispatcher = new EventDispatcher(store, queue, upcasters, progress);
   const pool = new WorkerPool<EventDelivery>({
     queue,
     handler: dispatcher.deliver,
@@ -135,7 +145,7 @@ export function createLedgerline(options: LedgerlineOptions): Ledgerline {
   const hosts = Object.values(readModels).map((projection) => new ProjectionHost(projection, upcasters));
   for (const host of hosts) {
     host.rebuild(store);
-    dispatcher.register(host);
+    dispatcher.register(host, { resume: false });
   }
   dispatcher.register(new FulfillmentProcess({ commands: bus, orders, inventory }));
   dispatcher.register(new PaymentProcess(bus, logger.child({ component: 'payment-process' })));
@@ -170,6 +180,23 @@ export function createLedgerline(options: LedgerlineOptions): Ledgerline {
     deadLetters,
     clock,
   };
+}
+
+/**
+ * Subscriber progress lives beside the event log, so copying or removing that
+ * directory takes it along. Only a `json-file` log keeps it: an in-memory or
+ * custom store has nothing to resume from (DESIGN §6.2).
+ */
+function createSubscriberProgress(persistence: PersistenceOptions, store: EventStore): SubscriberProgress {
+  if (persistence.kind !== 'json-file') {
+    return noSubscriberProgress;
+  }
+  const log = store.readAll();
+  return new FileSubscriberProgress(
+    progressPathFor(persistence.path),
+    { eventIds: new Set(log.map((event) => event.eventId)), length: log.length },
+    persistence.durable === undefined ? {} : { durable: persistence.durable },
+  );
 }
 
 function createEventStore(persistence: PersistenceOptions): EventStore {

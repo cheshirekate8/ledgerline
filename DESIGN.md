@@ -173,10 +173,41 @@ later events of the same aggregate for that subscriber, and projections refuse t
 gap in a stream. *Rejected:* a single global order, which would serialise the whole
 store behind one slow handler.
 
-### 6.2 The queue is in memory
+### 6.2 Work resumes after a restart
 
-Queued work is lost when the process stops; `republish()` re-drives it after a restart,
-which is safe because of §2.4. The queue is deliberately not persisted.
+The queue itself stays in memory, but with a file-backed event store each subscriber's
+**progress** is durable: which events it has finished handling, and which ended in the
+dead-letter queue. Every queued delivery is just "an event this subscriber has not
+finished", so progress plus the event log is the whole queue, and nothing else needs
+persisting.
+
+- **A subscriber resumes where it stopped.** When a named subscriber is registered over
+  a store that has its progress, every event it had not finished is queued for it
+  again, in stream order, before anything newer. Events it had finished are not
+  delivered again. Delivery stays at-least-once (§2.4): progress is recorded only after
+  a handler succeeds, so a delivery that was in flight when the process stopped is
+  delivered again.
+- **Queued at registration, not at the first drain.** If the backlog waited for the
+  first `processMessages()`, a command executed in between could queue a stream's new
+  events ahead of its unfinished old ones, breaking §6.1.
+- **Dead letters survive a restart as dead letters.** They are listed and can be
+  redriven by id as before, and they are not retried automatically: a dead letter means
+  a person needs to look, and a restart must not quietly retry or hide it.
+- **A subscriber is known from the moment it is first registered** against the store,
+  and from then on its unfinished events are tracked, even if it crashes before
+  finishing its first one. Only a name never registered against this store starts at the
+  end of the log, as any new subscriber does. Opening a log written
+  without recorded progress therefore re-runs nothing.
+- **Unfinished deliveries resume with a fresh retry budget.** Attempt counts are not
+  persisted; a delivery that keeps failing dead-letters again after `maxAttempts`.
+- `republish()` is unchanged and still sends every stored event to every subscriber.
+- *Rejected:* republishing every stored event on start. It would work (§2.4), but its
+  cost grows with history, and it depends on the idempotency store remembering every
+  key forever, which blocks ever bounding that store.
+- *Rejected:* persisting the queue's messages themselves. They are derived from the
+  event log, so storing them duplicates the log and lets the two disagree.
+- An in-memory or custom event store has nothing to resume from, so nothing changes for
+  them.
 
 ### 6.3 Snapshots are a cache
 
