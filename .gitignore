@@ -10,3 +10,10 @@ coverage/
 *.db
 .beads-credential-key
 .beads/proxieddb/
+
+# Git hooks installed by bd are host-only (reached through a local core.hooksPath);
+# they must never ship into a pipeline task container.
+.beads/hooks/
+
+# Claude Code host-only settings (plugins, hooks)
+.claude/settings.local.json

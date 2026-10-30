@@ -1,0 +1,20 @@
+{
+  "verifyCommand": "sh tools/run-acceptance.sh",
+  "regressionCommand": "npm test",
+  "buildCommand": "tsc -p tsconfig.json --noEmit",
+  "defaultBranch": "main",
+  "frozenPaths": [
+    "tools/run-acceptance.sh",
+    "tools/jest.acceptance.config.js",
+    "tsconfig.json"
+  ],
+  "dependencies": {
+    "npm": [
+      "@types/jest@30.0.0",
+      "@types/node@20.19.43",
+      "jest@30.5.2",
+      "ts-jest@29.4.15",
+      "typescript@5.9.3"
+    ]
+  }
+}
