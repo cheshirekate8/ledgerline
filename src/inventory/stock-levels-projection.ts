@@ -19,7 +19,7 @@ interface MutableLevel {
 
 /** Current stock per SKU: on hand, held by open reservations, and free to sell. */
 export class StockLevelsProjection implements Projection {
-  readonly name = 'stock-levels';
+  readonly name: string = 'stock-levels';
   readonly aggregateTypes = [INVENTORY_AGGREGATE];
   private levels = new Map<string, MutableLevel>();
 

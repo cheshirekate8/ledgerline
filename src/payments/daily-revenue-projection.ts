@@ -27,7 +27,7 @@ interface MutableDay {
  * refunds on the day they are issued, which may be a later day.
  */
 export class DailyRevenueProjection implements Projection {
-  readonly name = 'daily-revenue';
+  readonly name: string = 'daily-revenue';
   readonly aggregateTypes = [PAYMENT_AGGREGATE];
   private days = new Map<string, MutableDay>();
 

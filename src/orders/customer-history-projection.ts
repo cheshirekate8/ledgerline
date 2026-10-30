@@ -26,7 +26,7 @@ type MutableOrder = { -readonly [K in keyof CustomerOrder]: CustomerOrder[K] };
 
 /** Each customer's placed orders and what they have spent overall. */
 export class CustomerHistoryProjection implements Projection {
-  readonly name = 'customer-history';
+  readonly name: string = 'customer-history';
   readonly aggregateTypes = [ORDER_AGGREGATE];
   private customerOf = new Map<string, string>();
   private ordersByCustomer = new Map<string, MutableOrder[]>();

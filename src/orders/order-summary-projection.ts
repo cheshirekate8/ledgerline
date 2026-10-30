@@ -34,7 +34,7 @@ type Mutable<T> = { -readonly [K in keyof T]: T[K] };
 
 /** One row per order with its status, money and lifecycle timestamps. */
 export class OrderSummaryProjection implements Projection {
-  readonly name = 'order-summary';
+  readonly name: string = 'order-summary';
   readonly aggregateTypes = [ORDER_AGGREGATE];
   private orders = new Map<string, Mutable<OrderSummary>>();
   private draftLines = new Map<string, Map<string, number>>();
