@@ -7,7 +7,7 @@ import { CommandDispatcher } from '../../shared/commands/command';
 import { StoredEvent } from '../../shared/events/domain-event';
 import { EventSubscriber } from '../../shared/messaging/event-dispatcher';
 import { OrderCommand } from '../order-commands';
-import { ORDER_AGGREGATE, OrderCancelled, OrderEvent, OrderPaid, OrderPlaced } from '../order-events';
+import { ORDER_AGGREGATE, OrderCancelled, OrderEvent, OrderLineRefunded, OrderPaid, OrderPlaced } from '../order-events';
 import { OrderRepository } from '../order-repository';
 
 export interface FulfillmentProcessDependencies {
@@ -20,7 +20,8 @@ export interface FulfillmentProcessDependencies {
  * Keeps inventory in step with orders. A placed order reserves stock for
  * each SKU and becomes payable once every reservation is held, or is
  * cancelled as out of stock; a paid order confirms its reservations; a
- * cancelled or expired order releases them.
+ * cancelled or expired order releases them; and a refund of units that never
+ * shipped returns them.
  *
  * Every command it sends uses an idempotency key derived from the event
  * that caused it, so a redelivered event repeats nothing.
@@ -40,6 +41,8 @@ export class FulfillmentProcess implements EventSubscriber {
         return this.confirmStock(event);
       case 'OrderCancelled':
         return this.releaseStock(event);
+      case 'OrderLineRefunded':
+        return this.returnStock(event);
       default:
         return undefined;
     }
@@ -118,6 +121,35 @@ export class FulfillmentProcess implements EventSubscriber {
         }
       }
     }
+  }
+
+  /**
+   * Returns refunded units to stock when the refund event says they never
+   * shipped. The answer is the one the order gave at refund time (§3.2): by now
+   * the order may well have shipped, and reading its status would get it wrong.
+   */
+  private async returnStock(event: StoredEvent<OrderLineRefunded>): Promise<void> {
+    const { lineId, refundId, refund, returnsToStock } = event.payload;
+    if (!returnsToStock) {
+      return;
+    }
+    const sku = this.lineSku(event.aggregateId, lineId);
+    await this.dependencies.commands.execute({
+      type: 'ReturnStock',
+      idempotencyKey: `${event.eventId}:return:${sku}`,
+      payload: { sku, orderId: event.aggregateId, refundId, quantity: refund.quantity },
+      ...causedBy(event),
+    });
+  }
+
+  /** The SKU a refunded line was priced for; pricing is fixed at placement. */
+  private lineSku(orderId: string, lineId: string): string {
+    const pricing = this.dependencies.orders.load(orderId)?.pricing;
+    const sku = pricing?.lines.find((line) => line.lineId === lineId)?.sku;
+    if (sku === undefined) {
+      throw new Error(`Order ${orderId} has no priced line ${lineId}`);
+    }
+    return sku;
   }
 
   private orderSkus(orderId: string): string[] {

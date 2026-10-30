@@ -43,6 +43,9 @@ export class StockLevelsProjection implements Projection {
         level.reservations.delete(event.payload.orderId);
         level.onHand -= event.payload.quantity;
         break;
+      case 'StockReturned':
+        level.onHand += event.payload.quantity;
+        break;
       case 'StockReservationRejected':
         break;
     }

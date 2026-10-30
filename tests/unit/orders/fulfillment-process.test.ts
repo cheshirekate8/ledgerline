@@ -9,7 +9,18 @@ function setup() {
     orders: harness.orders,
     inventory: harness.inventory,
   });
-  return { ...harness, process };
+
+  /** A single-line order placed, reserved and paid, so its stock is out of inventory. */
+  const paidOrder = async (orderId: string, sku: string, onHand: number, quantity: number) => {
+    await harness.stock(sku, onHand);
+    await harness.placeOrder(orderId, [[sku, quantity]]);
+    await process.handle(harness.lastEvent('OrderPlaced'));
+    const total = harness.orders.load(orderId)!.totalCents;
+    await harness.run({ type: 'MarkOrderPaid', payload: { orderId, paymentId: `p-${orderId}`, amountCents: total } });
+    await process.handle(harness.lastEvent('OrderPaid'));
+  };
+
+  return { ...harness, process, paidOrder };
 }
 
 describe('FulfillmentProcess', () => {
@@ -104,6 +115,54 @@ describe('FulfillmentProcess', () => {
     await process.handle(lastEvent('OrderCancelled'));
     expect(inventory.load('MUG')!.available).toBe(10);
     expect(lastEvent('StockReservationReleased').payload).toMatchObject({ reason: 'reservation-expired' });
+  });
+
+  it('returns refunded units the event says never shipped, once', async () => {
+    const { paidOrder, process, lastEvent, inventory, run, store } = setup();
+    await paidOrder('o-1', 'MUG', 10, 3);
+    await run({ type: 'RefundOrderLine', payload: { orderId: 'o-1', lineId: 'o-1-l1', quantity: 2, refundId: 'r-1' } });
+    const refunded = lastEvent('OrderLineRefunded');
+    expect(refunded.payload).toMatchObject({ returnsToStock: true });
+
+    await process.handle(refunded);
+    const eventCount = store.readAll().length;
+    await process.handle(refunded);
+
+    expect(store.readAll()).toHaveLength(eventCount);
+    const item = inventory.load('MUG')!;
+    expect({ onHand: item.onHand, available: item.available }).toEqual({ onHand: 9, available: 9 });
+    expect(lastEvent('StockReturned')).toMatchObject({
+      aggregateId: 'MUG',
+      payload: { orderId: 'o-1', refundId: 'r-1', quantity: 2 },
+    });
+  });
+
+  it('returns nothing for a refund the order recorded as shipped', async () => {
+    const { paidOrder, process, lastEvent, inventory, run, store } = setup();
+    await paidOrder('o-1', 'MUG', 10, 3);
+    await run({ type: 'ShipOrder', payload: { orderId: 'o-1', trackingNumber: 'TRK-1' } });
+    await run({ type: 'RefundOrderLine', payload: { orderId: 'o-1', lineId: 'o-1-l1', quantity: 2, refundId: 'r-1' } });
+    const refunded = lastEvent('OrderLineRefunded');
+    expect(refunded.payload).toMatchObject({ returnsToStock: false });
+
+    const eventCount = store.readAll().length;
+    await process.handle(refunded);
+
+    expect(store.readAll()).toHaveLength(eventCount);
+    expect(inventory.load('MUG')!.onHand).toBe(7);
+  });
+
+  it('acts on the recorded decision even though the order has since shipped', async () => {
+    const { paidOrder, process, lastEvent, inventory, run, orders } = setup();
+    await paidOrder('o-1', 'MUG', 10, 3);
+    await run({ type: 'RefundOrderLine', payload: { orderId: 'o-1', lineId: 'o-1-l1', quantity: 1, refundId: 'r-1' } });
+    const refunded = lastEvent('OrderLineRefunded');
+    await run({ type: 'ShipOrder', payload: { orderId: 'o-1', trackingNumber: 'TRK-1' } });
+
+    await process.handle(refunded);
+
+    expect(orders.load('o-1')!.status).toBe('Shipped');
+    expect(inventory.load('MUG')!.onHand).toBe(8);
   });
 
   it('carries correlation and causation ids onto the commands it sends', async () => {

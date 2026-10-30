@@ -227,6 +227,11 @@ export class Order extends AggregateRoot<OrderState, OrderEvent> {
    * discount, coupon and tax prorated to those units, so the total refunded
    * for a line can never exceed what was paid for it. Refunding the last
    * paid unit of the order moves it to Refunded.
+   *
+   * The event also records whether the units go back into stock, which is true
+   * only while the order is Paid and nothing has shipped. The order decides it
+   * here rather than letting fulfillment read the status later, because by then
+   * the order may have shipped (§5.3, §3.2).
    */
   refundLine(refundId: string, lineId: string, quantity: number): void {
     if (this.state.refundIds.includes(refundId)) {
@@ -247,8 +252,14 @@ export class Order extends AggregateRoot<OrderState, OrderEvent> {
     const refund = refundForUnits(line, alreadyRefunded, quantity);
     this.raise({
       type: 'OrderLineRefunded',
-      version: 1,
-      payload: { refundId, lineId, paymentId: this.state.paymentId!, refund },
+      version: 2,
+      payload: {
+        refundId,
+        lineId,
+        paymentId: this.state.paymentId!,
+        refund,
+        returnsToStock: this.state.status === 'Paid',
+      },
     });
     if (this.allUnitsRefunded()) {
       this.raise({ type: 'OrderRefunded', version: 1, payload: { totalRefundedCents: this.state.refundedCents } });

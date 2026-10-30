@@ -1,0 +1,16 @@
+{
+  "aggregateType": "inventory-item",
+  "aggregateId": "MUG",
+  "sequence": 4,
+  "schemaVersion": 1,
+  "takenAt": "2026-06-01T09:00:00.000Z",
+  "state": {
+    "registered": true,
+    "name": "Mug",
+    "onHand": 2,
+    "reservations": {},
+    "closedReservations": {
+      "legacy": "confirmed"
+    }
+  }
+}

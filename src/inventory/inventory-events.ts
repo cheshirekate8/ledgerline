@@ -17,6 +17,13 @@ export type StockReservationReleased = EventData<
   { orderId: string; quantity: number; reason: ReleaseReason }
 >;
 export type StockReservationConfirmed = EventData<'StockReservationConfirmed', { orderId: string; quantity: number }>;
+/**
+ * Units of a refund that never shipped, back in stock. Deliberately distinct
+ * from `StockReceived`, so restocked units can be told apart from new
+ * deliveries, and named by both the order and the refund, because a refund id
+ * is only unique within its order (§5.3).
+ */
+export type StockReturned = EventData<'StockReturned', { orderId: string; refundId: string; quantity: number }>;
 
 export type InventoryEvent =
   | InventoryItemRegistered
@@ -24,7 +31,8 @@ export type InventoryEvent =
   | StockReserved
   | StockReservationRejected
   | StockReservationReleased
-  | StockReservationConfirmed;
+  | StockReservationConfirmed
+  | StockReturned;
 
 export const INVENTORY_EVENT_TYPES: readonly InventoryEvent['type'][] = [
   'InventoryItemRegistered',
@@ -33,4 +41,5 @@ export const INVENTORY_EVENT_TYPES: readonly InventoryEvent['type'][] = [
   'StockReservationRejected',
   'StockReservationReleased',
   'StockReservationConfirmed',
+  'StockReturned',
 ];

@@ -1,5 +1,6 @@
 import { OrderPricing, RefundAmounts } from '../pricing/pricing-types';
 import { EventData } from '../shared/events/domain-event';
+import { Upcaster } from '../shared/events/upcaster-registry';
 import { Cents } from '../shared/money';
 
 export const ORDER_AGGREGATE = 'order';
@@ -20,9 +21,14 @@ export type OrderPaid = EventData<'OrderPaid', { paymentId: string; amountCents:
 export type OrderShipped = EventData<'OrderShipped', { trackingNumber: string }>;
 export type OrderDelivered = EventData<'OrderDelivered', Record<string, never>>;
 export type OrderCancelled = EventData<'OrderCancelled', { reason: CancellationReason }>;
+/**
+ * `returnsToStock` is the order's answer, at refund time, to whether these units
+ * go back into stock: true only while the order is Paid, because nothing has
+ * shipped yet. Fulfillment reads it instead of the order's current status (§3.2).
+ */
 export type OrderLineRefunded = EventData<
   'OrderLineRefunded',
-  { refundId: string; lineId: string; paymentId: string; refund: RefundAmounts }
+  { refundId: string; lineId: string; paymentId: string; refund: RefundAmounts; returnsToStock: boolean }
 >;
 export type OrderRefunded = EventData<'OrderRefunded', { totalRefundedCents: Cents }>;
 
@@ -56,3 +62,19 @@ export const ORDER_EVENT_TYPES: readonly OrderEvent['type'][] = [
   'OrderLineRefunded',
   'OrderRefunded',
 ];
+
+/** Order event types whose payload shape has moved past version 1. */
+export const ORDER_EVENT_VERSIONS: Readonly<Record<string, number>> = Object.freeze({ OrderLineRefunded: 2 });
+
+/**
+ * Before the restocking rule existed no refund put units back, so a stored v1
+ * refund becomes a v2 refund that returns nothing: replay must not invent stock
+ * for history (§5.3).
+ */
+export const ORDER_UPCASTERS: readonly Upcaster[] = Object.freeze([
+  {
+    type: 'OrderLineRefunded',
+    fromVersion: 1,
+    upcast: (payload: unknown) => ({ ...(payload as Record<string, unknown>), returnsToStock: false }),
+  },
+]);

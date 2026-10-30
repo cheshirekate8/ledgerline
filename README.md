@@ -137,8 +137,8 @@ cancels unpaid orders whose reservation window has passed.
 | `RegisterInventoryItem` / `ReceiveStock` | `sku`, `name`, optional `initialQuantity` / `sku`, `quantity` |
 
 The process managers send the rest themselves: `ReserveStock`, `ReleaseStock`,
-`ConfirmStockReservation`, `RecordOrderStockReserved`, `MarkOrderPaid`,
-`ExpireOrderReservation` and `RefundPayment`.
+`ConfirmStockReservation`, `ReturnStock`, `RecordOrderStockReserved`,
+`MarkOrderPaid`, `ExpireOrderReservation` and `RefundPayment`.
 
 Broken rules are reported as typed errors that extend `DomainError`, each with a
 stable `code`: `InvalidOrderTransitionError`, `RefundExceedsPaidError`,
@@ -215,6 +215,16 @@ line knows exactly what was paid for it.
   than remain throws `RefundExceedsPaidError`. The payment independently refuses
   to refund more than was captured.
 - Refunding the last paid unit of an order moves it to **Refunded**.
+- **Units refunded while the order is Paid go back into stock** and are
+  available to sell again: the stock has left inventory but the goods have not
+  left the store. Refunds on a **Shipped** or **Delivered** order change no
+  stock — the goods are with the carrier or the customer, and are received with
+  `ReceiveStock` if they physically come back.
+  The order decides this at refund time and records it as `returnsToStock` on
+  the `OrderLineRefunded` event, so a refund that is processed after the order
+  has shipped still returns its units. Inventory records each return as its own
+  `StockReturned` event naming the order and the refund, never as
+  `StockReceived`, so restocked units can be told apart from new deliveries.
 
 ### Order states
 
@@ -283,12 +293,15 @@ republishing at any time is safe.
   from the latest snapshot. Snapshots are a cache: a snapshot taken with an older
   state schema version is ignored, and an aggregate loaded from a snapshot is
   identical to one replayed from scratch.
-- **Event versions.** Every event has a `type` and a `version`. All schemas are
-  at v1 today. The `UpcasterRegistry` lifts an older stored event to the current
-  version one step at a time as it is read, and refuses an unknown type, a
-  version newer than it understands, or a gap in the upcaster chain. A future
-  schema change declares the new version and registers its upcaster through
-  `configureUpcasters`; stored events are never rewritten.
+- **Event versions.** Every event has a `type` and a `version`. Every schema is
+  at v1 except `OrderLineRefunded`, which is at **v2** since it gained
+  `returnsToStock`; a stored v1 refund is upcast with `returnsToStock: false`,
+  because no refund restocked before that rule existed. The `UpcasterRegistry`
+  lifts an older stored event to the current version one step at a time as it is
+  read, and refuses an unknown type, a version newer than it understands, or a
+  gap in the upcaster chain. A further schema change declares the new version and
+  registers its upcaster through `configureUpcasters`; stored events are never
+  rewritten.
 
 ## Determinism
 
