@@ -2,6 +2,8 @@
 // v1-history.ndjson was written by the service as it was before this task: MUG stocked
 // with 5, order "legacy" paid for 3, then 1 unit refunded as a version 1 OrderLineRefunded
 // while the order was Paid. Before this rule existed no refund restocked, so on-hand is 2.
+// Updated when OrderLineRefunded moved to version 3 (DESIGN.md §5.4): subscribers now
+// receive the stored v1 refund upcast to v3, still with returnsToStock false.
 import { copyFileSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -47,7 +49,7 @@ describe('criterion 5: replaying v1 refund history', () => {
 
     const upcast = delivered.filter((event) => event.type === 'OrderLineRefunded');
     expect(upcast).toHaveLength(1);
-    expect(upcast[0]!.version).toBe(2);
+    expect(upcast[0]!.version).toBe(3);
     expect(payloadOf(upcast[0]!)).toMatchObject({ refundId: 'r-legacy-1', returnsToStock: false });
 
     expect(store.events('StockReturned')).toEqual([]);

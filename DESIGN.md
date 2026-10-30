@@ -105,9 +105,9 @@ exactly to the order total.
 
 A refund names a line and a quantity of units. Each line is split into units whose
 discount, coupon and tax shares are non-negative and sum exactly to the line, so partial
-refunds prorate correctly and can never exceed what was paid. *Rejected for now:*
-refunds by arbitrary amount (see `docs/IDEAS.md`), which need a separate rule for how a
-credit interacts with later unit refunds.
+refunds prorate correctly and can never exceed what was paid. Money given back by
+amount rather than by unit is a credit (§5.4), which carries its own rule for how it
+interacts with later unit refunds.
 
 ### 5.3 Refunded units that never shipped go back into stock
 
@@ -132,6 +132,40 @@ with `ReceiveStock` when they physically arrive.
   deliveries.
 - **Exactly once (§2.4):** a redelivered refund event or a repeated command returns the
   units once.
+
+### 5.4 Credits: money back without returning goods
+
+A credit gives a customer money back on a paid order without refunding any units, for
+example "$5 off for the late delivery". It names an amount and a reason, is allowed in
+the same statuses as a unit refund (Paid, Shipped, Delivered), and changes neither the
+order's status nor stock.
+
+- **The money returned on an order never exceeds what was paid.** Credits and unit
+  refunds draw on one balance: paid minus everything returned so far. A credit larger
+  than that balance is refused with a typed error.
+- **A credit comes off the last refunds.** A later unit refund still prorates as in
+  §5.2, but pays back only what the balance has left, so a $100 order credited $5 and
+  then refunded in full returns $95 for the goods and $100 in all. A refund whose
+  balance is exhausted still refunds its units, still restocks under §5.3, and still
+  moves the order to Refunded when it is the last unit, but returns no money. A fully
+  refunded order has therefore returned exactly what was paid.
+  - *Rejected:* refusing a unit refund that no longer fits. After a large credit some
+    goods could then never be returned through the system.
+  - *Rejected:* limiting a credit to the balance left after setting aside the value of
+    every unrefunded unit. That leaves no room for a credit until goods come back,
+    which defeats the purpose.
+- **The refund event records the money actually returned.** `OrderLineRefunded` keeps
+  its prorated breakdown, which says what the units were worth, and gains the amount
+  paid back, which can now be smaller. That changes its payload, so it moves to
+  version 3 (§2.3). Stored v1 and v2 refunds are upcast as having paid back their full
+  prorated total, which is what happened before credits existed.
+- **A credit is its own event**, naming the order's payment, the amount and the reason,
+  so a read model can tell goodwill apart from returned goods.
+- **Credits and unit refunds share the order's refund ids.** A command repeated with an
+  id the order has already used, by either kind, is a no-op (§2.4).
+- **Only money that moves reaches the payment.** The payments process refunds a
+  credit's amount and a unit refund's amount paid back; a unit refund that pays back
+  nothing sends no payment refund.
 
 ## 6. Messaging and persistence
 
@@ -163,3 +197,4 @@ for a planning session. Cite a row as change-log row followed by its slug in bac
 |---|---|---|---|
 | 2026-10-30 | `initial-design` | Recorded the decisions made while building the service: §1–§4, §5.1–§5.2 and §6 | The README described behaviour but not the reasons or the rejected alternatives, and pipeline tasks need a design section to cite |
 | 2026-10-30 | `restock-unshipped-refunds` | Added §3.2 (process managers act on what the event recorded) and §5.3 (refunded units of a paid, unshipped order return to stock; `OrderLineRefunded` moves to v2) | First planning session. Refunded but unshipped stock was stranded until someone ran `ReceiveStock` by hand |
+| 2026-10-30 | `refund-by-amount` | Added §5.4 (credits by amount; money returned never exceeds what was paid; a credit comes off the last refunds; `OrderLineRefunded` moves to v3) and reworded §5.2, which had rejected refunds by amount for want of this rule | Second planning session. Goodwill credits had no home because refunds were per unit only |

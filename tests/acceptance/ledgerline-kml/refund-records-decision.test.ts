@@ -1,5 +1,7 @@
 // Criterion 1: the order records, in a version 2 OrderLineRefunded, whether the refunded
 // units return to stock; every other stored event stays at version 1.
+// Updated when OrderLineRefunded moved to version 3 (DESIGN.md §5.4, change-log row
+// refund-by-amount): the event is now written at v3 and still records returnsToStock.
 import { openStore, payloadOf } from './harness';
 
 describe('criterion 1: the refund event records the stock decision', () => {
@@ -27,7 +29,7 @@ describe('criterion 1: the refund event records the stock decision', () => {
       ['delivered', false],
     ] as const) {
       const event = byOrder[orderId]!;
-      expect(event.version).toBe(2);
+      expect(event.version).toBe(3);
       expect(payloadOf(event)).toMatchObject({
         refundId: `r-${orderId}`,
         lineId: `${orderId}-l1`,
