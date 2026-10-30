@@ -38,9 +38,6 @@ date. Optional, only when true: `Blocked on:` (a change-log row or issue id) and
 
 ## Inbox
 
-- **Persist the message queue** — queued work is lost when the process stops, and today
-  recovery depends on someone remembering to call `republish()` after a restart.
-  2026-10-29. Related: README "Delivery guarantees".
 - **Find expiry candidates without loading every order** — `expireReservations()` replays
   every order stream on each sweep, which is fine for a small store and grows with order
   history. 2026-10-29. Related: `src/orders/reservation-expiry-service.ts`.
@@ -53,6 +50,7 @@ date. Optional, only when true: `Blocked on:` (a change-log row or issue id) and
 |---|---|---|
 | 2026-10-30 | Restock refunded units that never shipped | DESIGN.md §5.3 (change-log row `restock-unshipped-refunds`), issue `ledgerline-kml` |
 | 2026-10-30 | Refund by amount as well as by units | DESIGN.md §5.4 (change-log row `refund-by-amount`), issue `ledgerline-lpi` |
+| 2026-10-30 | Persist the message queue | DESIGN.md §6.2, as durable subscriber progress (change-log row `resume-after-restart`) |
 
 ## Dropped
 
