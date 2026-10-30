@@ -97,6 +97,38 @@ describe('InventoryItem', () => {
     expect(item.outcomeFor('o-1')).toBe('confirmed');
   });
 
+  it('returns refunded units to stock, once per order and refund', () => {
+    const item = stockedItem(3);
+    item.reserve('o-1', 3, EXPIRES);
+    item.confirm('o-1');
+
+    item.returnFromRefund('o-1', 'r-1', 2);
+    item.returnFromRefund('o-1', 'r-1', 2);
+
+    expect(item.onHand).toBe(2);
+    expect(item.available).toBe(2);
+    expect(item.returnedFor('o-1', 'r-1')).toBe(2);
+    expect(item.peekPendingEvents().filter((event) => event.type === 'StockReturned')).toEqual([
+      { type: 'StockReturned', version: 1, payload: { orderId: 'o-1', refundId: 'r-1', quantity: 2 } },
+    ]);
+  });
+
+  it('tells two orders that share a refund id apart', () => {
+    const item = stockedItem(5);
+    item.returnFromRefund('o-1', 'r-1', 1);
+    item.returnFromRefund('o-2', 'r-1', 2);
+    expect(item.onHand).toBe(8);
+    expect(item.returnedFor('o-1', 'r-1')).toBe(1);
+    expect(item.returnedFor('o-2', 'r-1')).toBe(2);
+    expect(item.returnedFor('o-3', 'r-1')).toBe(0);
+  });
+
+  it('refuses to return a non-positive number of units', () => {
+    const item = stockedItem(5);
+    expect(() => item.returnFromRefund('o-1', 'r-1', 0)).toThrow(ValidationError);
+    expect(() => item.returnFromRefund('o-1', 'r-1', 1.5)).toThrow(ValidationError);
+  });
+
   it('refuses to confirm a reservation that does not exist', () => {
     const item = stockedItem(10);
     expect(() => item.confirm('o-9')).toThrow(ReservationNotFoundError);

@@ -47,5 +47,10 @@ export function inventoryCommandHandlers(repository: InventoryRepository): Handl
       item.confirm(payload.orderId);
       return save(item, context);
     },
+    ReturnStock: ({ payload }, context) => {
+      const item = loadRegistered(payload.sku);
+      item.returnFromRefund(payload.orderId, payload.refundId, payload.quantity);
+      return save(item, context);
+    },
   };
 }

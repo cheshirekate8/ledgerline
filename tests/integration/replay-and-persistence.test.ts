@@ -28,7 +28,8 @@ describe('replaying event streams', () => {
     expect(stock).toEqual([
       { sku: 'MUG', name: 'mug', onHand: 16, reserved: 0, available: 16 },
       { sku: 'POSTER', name: 'poster', onHand: 1, reserved: 0, available: 1 },
-      { sku: 'STICKER', name: 'sticker', onHand: 87, reserved: 0, available: 87 },
+      // 100 − 10 (o-2) − 3 (o-5) + 4 returned by o-2's refund, which was made while Paid.
+      { sku: 'STICKER', name: 'sticker', onHand: 91, reserved: 0, available: 91 },
       { sku: 'TEE', name: 'tee', onHand: 5, reserved: 0, available: 5 },
     ]);
     expect(revenue).toEqual([

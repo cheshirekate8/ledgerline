@@ -1,6 +1,6 @@
 export { createLedgerline } from './app/ledgerline';
 export type { Ledgerline, ReadModels } from './app/ledgerline';
-export { ALL_EVENT_TYPES } from './app/ledgerline-commands';
+export { ALL_EVENT_TYPES, EVENT_VERSIONS } from './app/ledgerline-commands';
 export type { LedgerlineCommand } from './app/ledgerline-commands';
 export type { LedgerlineOptions, PersistenceOptions } from './app/ledgerline-options';
 
