@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CustomerHistoryProjection } from '../../src/orders/customer-history-projection';
@@ -7,6 +7,7 @@ import { DailyRevenueProjection } from '../../src/payments/daily-revenue-project
 import { StockLevelsProjection } from '../../src/inventory/stock-levels-projection';
 import { createUpcasterRegistry } from '../../src/app/ledgerline-commands';
 import { InMemorySnapshotStore } from '../../src/shared/snapshots/snapshot-store';
+import { ProgressCorruptionError } from '../../src/shared/messaging/subscriber-progress';
 import { ProjectionHost } from '../../src/shared/projections/projection';
 import { runStoreScenario } from '../support/scenario';
 import { createTestApp, placeOrder, readModelState, stockItems } from '../support/test-app';
@@ -140,11 +141,59 @@ describe('the JSON file event store', () => {
     expect(before.app.queue.pendingCount).toBeGreaterThan(0);
     before.app.close();
 
+    // The backlog is queued when the built-in processes register, not by republish().
     const after = createTestApp({ persistence: { kind: 'json-file', path }, clock: before.clock, seed: 99 });
     expect(after.app.readModels.orderSummary.get('o-1')).toMatchObject({ status: 'Placed', stockReserved: false });
-    after.app.republish();
+    expect(after.app.queue.pendingCount).toBeGreaterThan(0);
     await after.settle();
     expect(after.app.readModels.orderSummary.get('o-1')!.stockReserved).toBe(true);
     expect(after.app.readModels.stockLevels.get('MUG')!.reserved).toBe(2);
+  });
+
+  it('does not hand a subscriber work it had already finished', async () => {
+    const path = join(directory, 'events.ndjson');
+    const before = createTestApp({ persistence: { kind: 'json-file', path, durable: false } });
+    await stockItems(before, { MUG: 5 });
+    await placeOrder(before, 'o-1', [['MUG', 2]]);
+    await before.settle();
+    const handledBefore = before.app.store.readAll().length;
+    await placeOrder(before, 'o-2', [['MUG', 1]]);
+    before.app.close();
+
+    const after = createTestApp({ persistence: { kind: 'json-file', path }, clock: before.clock, seed: 99 });
+    await after.settle();
+    const handled = after.logs
+      .entries()
+      .filter((entry) => entry['msg'] === 'message.handled' && entry['subscriber'] === 'order-fulfillment')
+      .map((entry) => String(entry['aggregateId']));
+    expect(handled).not.toContain('o-1');
+    expect(handled).toContain('o-2');
+    expect(after.app.store.readAll().length).toBeGreaterThan(handledBefore);
+    expect(after.app.readModels.stockLevels.get('MUG')!.reserved).toBe(3);
+  });
+
+  it('keeps progress beside the log, and keeps none for an in-memory store', async () => {
+    const path = join(directory, 'events.ndjson');
+    const onDisk = createTestApp({ persistence: { kind: 'json-file', path, durable: false } });
+    await stockItems(onDisk, { MUG: 5 });
+    await onDisk.settle();
+    expect(readdirSync(directory).sort()).toEqual(['events.ndjson', 'events.ndjson.progress.ndjson']);
+
+    const inMemory = createTestApp();
+    await stockItems(inMemory, { MUG: 5 });
+    await inMemory.settle();
+    expect(readdirSync(directory).sort()).toEqual(['events.ndjson', 'events.ndjson.progress.ndjson']);
+  });
+
+  it('refuses to start when the progress beside the log cannot be read', async () => {
+    const path = join(directory, 'events.ndjson');
+    const before = createTestApp({ persistence: { kind: 'json-file', path, durable: false } });
+    await stockItems(before, { MUG: 5 });
+    await before.settle();
+
+    writeFileSync(`${path}.progress.ndjson`, 'not a progress record\n');
+    expect(() => createTestApp({ persistence: { kind: 'json-file', path }, seed: 99 })).toThrow(
+      ProgressCorruptionError,
+    );
   });
 });
