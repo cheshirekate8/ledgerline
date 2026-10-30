@@ -21,7 +21,9 @@ export interface OrderState {
   readonly paymentId: string | null;
   readonly paidCents: Cents;
   readonly refundedUnits: Readonly<Record<string, number>>;
-  readonly refundedCents: Cents;
+  /** Money given back on the order: credits plus what unit refunds paid back (§5.4). */
+  readonly returnedCents: Cents;
+  /** Ids already used by a unit refund or a credit; both kinds share them (§5.4). */
   readonly refundIds: readonly string[];
   readonly cancellationReason: CancellationReason | null;
   readonly trackingNumber: string | null;
@@ -41,7 +43,7 @@ export const INITIAL_ORDER_STATE: OrderState = Object.freeze({
   paymentId: null,
   paidCents: cents(0),
   refundedUnits: {},
-  refundedCents: cents(0),
+  returnedCents: cents(0),
   refundIds: [],
   cancellationReason: null,
   trackingNumber: null,
@@ -77,14 +79,20 @@ export function evolveOrder(state: OrderState, event: OrderEvent): OrderState {
     case 'OrderCancelled':
       return { ...state, status: 'Cancelled', cancellationReason: event.payload.reason };
     case 'OrderLineRefunded': {
-      const { lineId, refund, refundId } = event.payload;
+      const { lineId, refund, refundId, paidBackCents } = event.payload;
       return {
         ...state,
         refundedUnits: { ...state.refundedUnits, [lineId]: (state.refundedUnits[lineId] ?? 0) + refund.quantity },
-        refundedCents: cents(state.refundedCents + refund.totalCents),
+        returnedCents: cents(state.returnedCents + paidBackCents),
         refundIds: [...state.refundIds, refundId],
       };
     }
+    case 'OrderCredited':
+      return {
+        ...state,
+        returnedCents: cents(state.returnedCents + event.payload.amountCents),
+        refundIds: [...state.refundIds, event.payload.creditId],
+      };
     case 'OrderRefunded':
       return { ...state, status: 'Refunded' };
   }

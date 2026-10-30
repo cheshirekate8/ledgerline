@@ -52,7 +52,7 @@ date. Optional, only when true: `Blocked on:` (a change-log row or issue id) and
 | Date | Idea | Became |
 |---|---|---|
 | 2026-10-30 | Restock refunded units that never shipped | DESIGN.md §5.3 (change-log row `restock-unshipped-refunds`), issue `ledgerline-kml` |
-| 2026-10-30 | Refund by amount as well as by units | DESIGN.md §5.4 (change-log row `refund-by-amount`) |
+| 2026-10-30 | Refund by amount as well as by units | DESIGN.md §5.4 (change-log row `refund-by-amount`), issue `ledgerline-lpi` |
 
 ## Dropped
 
