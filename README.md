@@ -312,3 +312,7 @@ logs exactly one line per message outcome:
 Each line names the subscriber, event id, type, version, aggregate, sequence and
 delivery attempt. The service also logs `order.reservation_expired` and
 `payment.compensated`.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

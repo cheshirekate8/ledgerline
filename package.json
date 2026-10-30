@@ -2,7 +2,7 @@
   "name": "ledgerline",
   "version": "0.1.0",
   "description": "Event-sourced order and inventory service for a small online store",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "private": true,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
