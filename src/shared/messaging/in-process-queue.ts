@@ -136,12 +136,18 @@ export class InProcessQueue<T> {
     return this.findDeliverable() !== undefined;
   }
 
-  /** Earliest time any waiting message becomes deliverable. */
+  /**
+   * Earliest time a waiting message becomes deliverable. Only the head of
+   * each group counts: a later message in the same group waits for it.
+   */
   nextAvailableAt(): number | undefined {
-    if (this.pending.length === 0) {
-      return undefined;
+    const heads = new Map<string, number>();
+    for (const record of this.pending) {
+      if (!heads.has(record.groupKey)) {
+        heads.set(record.groupKey, record.availableAt);
+      }
     }
-    return Math.min(...this.pending.map((record) => record.availableAt));
+    return heads.size === 0 ? undefined : Math.min(...heads.values());
   }
 
   get pendingCount(): number {

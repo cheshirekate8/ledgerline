@@ -112,6 +112,16 @@ describe('InProcessQueue', () => {
     expect(queue.ack(redelivery.leaseId)).toBe(true);
   });
 
+  it('reports when a retried group head becomes available, not the messages queued behind it', () => {
+    const { clock, queue } = setup();
+    queue.enqueue('head', { groupKey: 'g' });
+    queue.fail(queue.lease()!.leaseId, 'boom');
+    clock.advance(10);
+    queue.enqueue('behind', { groupKey: 'g' });
+    expect(queue.hasDeliverable()).toBe(false);
+    expect(queue.nextAvailableAt()).toBe(100);
+  });
+
   it('reports whether anything can be delivered right now', () => {
     const { queue } = setup();
     expect(queue.hasDeliverable()).toBe(false);
