@@ -28,6 +28,16 @@ export type CommandHandler<C extends Command> = (
   context: CommandContext,
 ) => HandlerOutcome | Promise<HandlerOutcome>;
 
+/** One handler per command type of the union `C`. */
+export type HandlerMap<C extends Command> = {
+  readonly [K in C['type']]: CommandHandler<Extract<C, { type: K }>>;
+};
+
+/** Anything that can execute commands; what process managers depend on. */
+export interface CommandDispatcher<C extends Command> {
+  execute(command: C): Promise<CommandResult>;
+}
+
 export interface CommandResult {
   readonly aggregateId: string;
   readonly version: number;

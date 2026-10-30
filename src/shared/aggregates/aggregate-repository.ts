@@ -20,6 +20,9 @@ export interface AggregateRepositoryOptions<A> {
   readonly snapshotSchemaVersion?: number;
 }
 
+/** What every domain repository needs from the composition root. */
+export type RepositoryDependencies = Omit<AggregateRepositoryOptions<unknown>, 'aggregateType' | 'create'>;
+
 /**
  * Loads aggregates by replaying their stream (from the latest snapshot when
  * snapshots are enabled) and saves their new events with an optimistic

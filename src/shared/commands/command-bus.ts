@@ -1,6 +1,6 @@
 import { ConcurrencyError, DomainError } from '../errors';
 import { fingerprint } from '../stable-json';
-import { Command, CommandHandler, CommandResult } from './command';
+import { Command, CommandDispatcher, CommandHandler, CommandResult, HandlerMap } from './command';
 import { IdempotencyRecord, IdempotencyStore, InMemoryIdempotencyStore } from './idempotency-store';
 
 export class IdempotencyConflictError extends DomainError {
@@ -32,7 +32,7 @@ export interface CommandBusOptions {
  * recorded, so a command rejected by a business rule may be retried later
  * under the same key.
  */
-export class CommandBus<C extends Command = Command> {
+export class CommandBus<C extends Command = Command> implements CommandDispatcher<C> {
   private readonly handlers = new Map<string, CommandHandler<C>>();
   private readonly idempotency: IdempotencyStore;
   private readonly maxConflictRetries: number;
@@ -48,6 +48,13 @@ export class CommandBus<C extends Command = Command> {
       throw new Error(`A handler for ${type} is already registered`);
     }
     this.handlers.set(type, handler as unknown as CommandHandler<C>);
+    return this;
+  }
+
+  registerAll(handlers: Partial<HandlerMap<C>>): this {
+    for (const [type, handler] of Object.entries(handlers)) {
+      this.register(type as C['type'], handler as CommandHandler<Extract<C, { type: C['type'] }>>);
+    }
     return this;
   }
 
