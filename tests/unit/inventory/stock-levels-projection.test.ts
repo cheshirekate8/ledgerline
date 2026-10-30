@@ -34,13 +34,14 @@ describe('StockLevelsProjection', () => {
     change('MUG', (item) => item.reserve('o-2', 2, EXPIRES));
     change('MUG', (item) => item.confirm('o-1'));
     change('MUG', (item) => item.release('o-2', 'reservation-expired'));
+    change('MUG', (item) => item.returnFromRefund('o-1', 'r-1', 1));
     change('CUP', (item) => item.reserve('o-3', 5, EXPIRES));
     change('CUP', (item) => item.reserve('o-4', 1, EXPIRES));
 
     host.rebuild(store);
     expect(host.projection.all()).toEqual([
       { sku: 'CUP', name: 'Cup', onHand: 3, reserved: 1, available: 2 },
-      { sku: 'MUG', name: 'Mug', onHand: 6, reserved: 0, available: 6 },
+      { sku: 'MUG', name: 'Mug', onHand: 7, reserved: 0, available: 7 },
     ]);
     expect(host.projection.get('NONE')).toBeUndefined();
   });
@@ -55,6 +56,7 @@ describe('StockLevelsProjection', () => {
       (item) => item.reserve('o-2', 9, EXPIRES),
       (item) => item.confirm('o-1'),
       (item) => item.receive(2),
+      (item) => item.returnFromRefund('o-1', 'r-1', 2),
     ];
     for (const step of steps) {
       change('MUG', step);

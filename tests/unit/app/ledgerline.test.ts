@@ -1,19 +1,35 @@
 import { createLedgerline } from '../../../src/app/ledgerline';
-import { ALL_EVENT_TYPES, createUpcasterRegistry } from '../../../src/app/ledgerline-commands';
+import { ALL_EVENT_TYPES, createUpcasterRegistry, EVENT_VERSIONS } from '../../../src/app/ledgerline-commands';
 import { createPricingCatalog } from '../../../src/pricing/pricing-catalog';
 import { FixedClock } from '../../../src/shared/clock';
+import { StoredEvent } from '../../../src/shared/events/domain-event';
 import { InMemoryEventStore } from '../../../src/shared/events/in-memory-event-store';
 import { SeededIdGenerator } from '../../../src/shared/ids';
 import { JsonLogger, MemoryLogSink } from '../../../src/shared/logger';
 import { TEST_CATALOG_CONFIG } from '../../support/catalog';
 
 describe('createUpcasterRegistry', () => {
-  it('declares every event type at version 1', () => {
+  it('declares every event type at its current version', () => {
     const registry = createUpcasterRegistry();
-    expect(ALL_EVENT_TYPES).toHaveLength(21);
+    expect(ALL_EVENT_TYPES).toHaveLength(22);
     for (const type of ALL_EVENT_TYPES) {
-      expect(registry.currentVersion(type)).toBe(1);
+      expect(registry.currentVersion(type)).toBe(EVENT_VERSIONS[type] ?? 1);
     }
+    expect(EVENT_VERSIONS).toEqual({ OrderLineRefunded: 2 });
+  });
+
+  it('upcasts a v1 OrderLineRefunded as not returning its units to stock', () => {
+    const registry = createUpcasterRegistry();
+    const stored = {
+      type: 'OrderLineRefunded',
+      version: 1,
+      payload: { refundId: 'r-1', lineId: 'l-1', paymentId: 'p-1', refund: { quantity: 1, totalCents: 1_000 } },
+    } as unknown as StoredEvent;
+
+    const upcast = registry.upcast(stored);
+
+    expect(upcast.version).toBe(2);
+    expect(upcast.payload).toEqual({ ...(stored.payload as object), returnsToStock: false });
   });
 
   it('lets a future schema version and its upcaster be declared through the hook', () => {

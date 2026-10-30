@@ -18,6 +18,8 @@ export interface InventoryState {
   readonly onHand: number;
   readonly reservations: Readonly<Record<string, Reservation>>;
   readonly closedReservations: Readonly<Record<string, ReservationOutcome>>;
+  /** Units already returned, keyed by order and refund together (§2.4). */
+  readonly returns: Readonly<Record<string, number>>;
 }
 
 const INITIAL_STATE: InventoryState = {
@@ -26,6 +28,7 @@ const INITIAL_STATE: InventoryState = {
   onHand: 0,
   reservations: {},
   closedReservations: {},
+  returns: {},
 };
 
 /**
@@ -71,6 +74,11 @@ export class InventoryItem extends AggregateRoot<InventoryState, InventoryEvent>
 
   outcomeFor(orderId: string): ReservationOutcome | undefined {
     return this.state.closedReservations[orderId];
+  }
+
+  /** Units this order's refund has already put back; 0 if it never has. */
+  returnedFor(orderId: string, refundId: string): number {
+    return this.state.returns[returnKey(orderId, refundId)] ?? 0;
   }
 
   register(name: string): void {
@@ -131,6 +139,20 @@ export class InventoryItem extends AggregateRoot<InventoryState, InventoryEvent>
     this.raise({ type: 'StockReservationConfirmed', version: 1, payload: { orderId, quantity: reservation.quantity } });
   }
 
+  /**
+   * Puts refunded units that never shipped back into stock. A return is
+   * identified by its order *and* its refund, so a repeat of the same refund is
+   * a no-op while the same refund id on another order still returns its own
+   * units.
+   */
+  returnFromRefund(orderId: string, refundId: string, quantity: number): void {
+    assertPositiveQuantity(quantity);
+    if (this.state.returns[returnKey(orderId, refundId)] !== undefined) {
+      return;
+    }
+    this.raise({ type: 'StockReturned', version: 1, payload: { orderId, refundId, quantity } });
+  }
+
   protected evolve(state: InventoryState, event: InventoryEvent): InventoryState {
     switch (event.type) {
       case 'InventoryItemRegistered':
@@ -151,8 +173,21 @@ export class InventoryItem extends AggregateRoot<InventoryState, InventoryEvent>
         return close(state, event.payload.orderId, 'released');
       case 'StockReservationConfirmed':
         return { ...close(state, event.payload.orderId, 'confirmed'), onHand: state.onHand - event.payload.quantity };
+      case 'StockReturned': {
+        const { orderId, refundId, quantity } = event.payload;
+        return {
+          ...state,
+          onHand: state.onHand + quantity,
+          returns: { ...state.returns, [returnKey(orderId, refundId)]: quantity },
+        };
+      }
     }
   }
+}
+
+/** An unambiguous key for a refund of one order, whatever the ids contain. */
+function returnKey(orderId: string, refundId: string): string {
+  return JSON.stringify([orderId, refundId]);
 }
 
 function close(state: InventoryState, orderId: string, outcome: ReservationOutcome): InventoryState {

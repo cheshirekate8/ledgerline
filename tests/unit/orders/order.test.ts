@@ -246,6 +246,27 @@ describe('Order', () => {
     it('refuses refunds before payment', () => {
       expect(() => placed().refundLine('r-1', 'a', 1)).toThrow(OrderNotRefundableError);
     });
+
+    it('records at v2 that only units refunded while Paid return to stock', () => {
+      const paidRefund = paid();
+      paidRefund.refundLine('r-1', 'a', 1);
+      expect(paidRefund.peekPendingEvents().at(-1)).toMatchObject({
+        type: 'OrderLineRefunded',
+        version: 2,
+        payload: { returnsToStock: true },
+      });
+
+      const shipped = paid();
+      shipped.ship('T');
+      shipped.refundLine('r-1', 'a', 1);
+      expect(shipped.peekPendingEvents().at(-1)).toMatchObject({ version: 2, payload: { returnsToStock: false } });
+
+      const delivered = paid();
+      delivered.ship('T');
+      delivered.deliver();
+      delivered.refundLine('r-1', 'a', 1);
+      expect(delivered.peekPendingEvents().at(-1)).toMatchObject({ version: 2, payload: { returnsToStock: false } });
+    });
   });
 
   it('rebuilds identically from its own events', () => {

@@ -52,6 +52,23 @@ describe('inventory command handlers', () => {
     });
   });
 
+  it('returns refunded stock once per order and refund', async () => {
+    const { run, repository, store } = setup();
+    await run({ type: 'RegisterInventoryItem', payload: { sku: 'MUG', name: 'Mug', initialQuantity: 5 } });
+    const returnStock = {
+      type: 'ReturnStock',
+      payload: { sku: 'MUG', orderId: 'o-1', refundId: 'r-1', quantity: 2 },
+    } as const;
+
+    await run(returnStock, 'return-1');
+    expect((await run(returnStock, 'return-1')).duplicate).toBe(true);
+    await run(returnStock, 'another-key');
+    await run({ type: 'ReturnStock', payload: { sku: 'MUG', orderId: 'o-2', refundId: 'r-1', quantity: 1 } });
+
+    expect(repository.load('MUG')!.onHand).toBe(8);
+    expect(store.readStream('inventory-item', 'MUG').filter((event) => event.type === 'StockReturned')).toHaveLength(2);
+  });
+
   it('applies a redelivered reservation command once', async () => {
     const { run, repository } = setup();
     await run({ type: 'RegisterInventoryItem', payload: { sku: 'MUG', name: 'Mug', initialQuantity: 5 } });
