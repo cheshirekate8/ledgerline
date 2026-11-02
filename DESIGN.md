@@ -89,6 +89,29 @@ A payment captured for an order that has since expired, or that another payment 
 paid, is refunded in full by the payments process manager. Money is never kept for an
 order that will not be fulfilled.
 
+### 4.4 An expiry sweep looks only at orders awaiting payment
+
+`expireReservations()` must cost what is pending, not what is past. A sweep loads only
+the orders that are Placed (awaiting payment) at that moment; it never reads the whole
+event log or walks every order id, so a store with years of closed orders sweeps as fast
+as a new one. Which orders it expires depends only on each order and its recorded expiry.
+
+- **Candidates are known the moment an order is placed.** An order placed and already
+  overdue is expired by the next sweep even if no messages have been processed since. The candidates therefore follow the event store's own appends (or
+  read only what was appended since the previous sweep), and are rebuilt from the log
+  when the store opens, which already replays the log to rebuild read models and keys.
+  An expiry time is the one recorded when the order was placed, never recomputed from
+  the current reservation window.
+- **Orders are expired in the order they were created**, so a seeded run gives a
+  byte-identical event log (§2.2).
+- **The order still decides.** A candidate that was paid or cancelled a moment ago is
+  loaded, found not Placed, and left alone; the index only narrows the search.
+- *Rejected:* finding candidates through the order-summary read model. It lags until
+  `processMessages()` runs, so an order placed and overdue before then would be missed
+  by a sweep that should find it.
+- *Rejected:* persisting expiry times in a file of their own. They are derived from the
+  log, so storing them duplicates it and lets the two disagree.
+
 ## 5. Pricing and refunds
 
 ### 5.1 Order of operations

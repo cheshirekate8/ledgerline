@@ -186,7 +186,10 @@ export function createLedgerline(options: LedgerlineOptions): Ledgerline {
       return events.length;
     },
     redrive: (messageId) => queue.redrive(messageId),
-    close: () => dispatcher.stop(),
+    close: () => {
+      dispatcher.stop();
+      expiry.close();
+    },
     readModels,
     store,
     queue,

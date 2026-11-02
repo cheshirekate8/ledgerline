@@ -198,7 +198,10 @@ line knows exactly what was paid for it.
 - An unpaid order whose window has passed is cancelled as `reservation-expired`
   by `expireReservations()`, and its reserved stock goes back to available.
   Payment is refused from the moment the window closes, even if the sweep has
-  not run yet.
+  not run yet. A sweep looks only at the orders awaiting payment, so its cost
+  follows how many orders are pending, not how many the store has ever seen.
+  An order's expiry is the one recorded when it was placed, so changing
+  `reservationTtlMs` never moves the deadline of an order already placed.
 - Paying confirms the reservations, and the units leave stock.
 - If a payment is captured just before the window closes but the order expires
   before the payment is applied, the payment is refunded in full automatically.

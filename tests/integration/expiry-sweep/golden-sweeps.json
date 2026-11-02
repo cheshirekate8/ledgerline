@@ -1,0 +1,1335 @@
+{
+  "sweeps": [
+    [],
+    [
+      "m1",
+      "m2"
+    ],
+    [],
+    [
+      "m4"
+    ],
+    []
+  ],
+  "events": [
+    {
+      "type": "InventoryItemRegistered",
+      "version": 1,
+      "payload": {
+        "sku": "MUG",
+        "name": "mug"
+      },
+      "eventId": "82f75e6b-87aa-415c-9bad-a88197149222",
+      "occurredAt": "2026-06-01T09:00:00.000Z",
+      "metadata": {
+        "idempotencyKey": "stock-MUG",
+        "commandType": "RegisterInventoryItem",
+        "commandFingerprint": "80a6c2bdd5da8322184f4466c1df9c1947341c5655b75135d0bb826293268e8c"
+      },
+      "aggregateType": "inventory-item",
+      "aggregateId": "MUG",
+      "sequence": 1,
+      "position": 1
+    },
+    {
+      "type": "StockReceived",
+      "version": 1,
+      "payload": {
+        "quantity": 6
+      },
+      "eventId": "d9cc8066-89bb-444c-947c-983287cf358f",
+      "occurredAt": "2026-06-01T09:00:00.000Z",
+      "metadata": {
+        "idempotencyKey": "stock-MUG",
+        "commandType": "RegisterInventoryItem",
+        "commandFingerprint": "80a6c2bdd5da8322184f4466c1df9c1947341c5655b75135d0bb826293268e8c"
+      },
+      "aggregateType": "inventory-item",
+      "aggregateId": "MUG",
+      "sequence": 2,
+      "position": 2
+    },
+    {
+      "type": "InventoryItemRegistered",
+      "version": 1,
+      "payload": {
+        "sku": "CUP",
+        "name": "cup"
+      },
+      "eventId": "2db3218e-46ae-4812-a55a-dadc6080aa55",
+      "occurredAt": "2026-06-01T09:00:00.000Z",
+      "metadata": {
+        "idempotencyKey": "stock-CUP",
+        "commandType": "RegisterInventoryItem",
+        "commandFingerprint": "e7df71f6bf7f9cdaf75a1d28efa90cc1009efd08e8e979db62eaa956cf247f68"
+      },
+      "aggregateType": "inventory-item",
+      "aggregateId": "CUP",
+      "sequence": 1,
+      "position": 3
+    },
+    {
+      "type": "StockReceived",
+      "version": 1,
+      "payload": {
+        "quantity": 2
+      },
+      "eventId": "951f50b1-20a2-4fc7-98da-5cff93980b26",
+      "occurredAt": "2026-06-01T09:00:00.000Z",
+      "metadata": {
+        "idempotencyKey": "stock-CUP",
+        "commandType": "RegisterInventoryItem",
+        "commandFingerprint": "e7df71f6bf7f9cdaf75a1d28efa90cc1009efd08e8e979db62eaa956cf247f68"
+      },
+      "aggregateType": "inventory-item",
+      "aggregateId": "CUP",
+      "sequence": 2,
+      "position": 4
+    },
+    {
+      "type": "OrderCreated",
+      "version": 1,
+      "payload": {
+        "customerId": "customer-m1",
+        "shippingRegion": "US-OR"
+      },
+      "eventId": "bdac4e4a-fa48-4243-8bfd-7fda25833661",
+      "occurredAt": "2026-06-01T09:00:00.000Z",
+      "metadata": {
+        "idempotencyKey": "m1-create",
+        "commandType": "CreateOrder",
+        "commandFingerprint": "2f08f7b712c899055e883b6657e096425cb1a92793dcef6efc9e8d760e5a506a"
+      },
+      "aggregateType": "order",
+      "aggregateId": "m1",
+      "sequence": 1,
+      "position": 5
+    },
+    {
+      "type": "OrderLineAdded",
+      "version": 1,
+      "payload": {
+        "lineId": "m1-l1",
+        "sku": "MUG",
+        "quantity": 1,
+        "unitPriceCents": 1000
+      },
+      "eventId": "bbf5e7f7-16c2-4d38-a4e3-a4c60b8bcb1c",
+      "occurredAt": "2026-06-01T09:00:00.000Z",
+      "metadata": {
+        "idempotencyKey": "m1-line",
+        "commandType": "AddOrderLine",
+        "commandFingerprint": "1b3e39c016b857173564d2e03af34440ce755fe0622a0a8a29da37ca454d0d9d"
+      },
+      "aggregateType": "order",
+      "aggregateId": "m1",
+      "sequence": 2,
+      "position": 6
+    },
+    {
+      "type": "OrderPlaced",
+      "version": 1,
+      "payload": {
+        "pricing": {
+          "lines": [
+            {
+              "lineId": "m1-l1",
+              "sku": "MUG",
+              "quantity": 1,
+              "unitPriceCents": 1000,
+              "grossCents": 1000,
+              "discountCents": 0,
+              "netCents": 1000,
+              "couponCents": 0,
+              "taxCents": 0,
+              "totalCents": 1000
+            }
+          ],
+          "discountCodes": [],
+          "subtotalCents": 1000,
+          "discountCents": 0,
+          "discountedSubtotalCents": 1000,
+          "couponCents": 0,
+          "taxableCents": 1000,
+          "taxRateBasisPoints": 0,
+          "taxCents": 0,
+          "totalCents": 1000
+        },
+        "reservationExpiresAt": "2026-06-01T09:15:00.000Z"
+      },
+      "eventId": "a1568ae0-9fa6-4aca-a01f-6a155e825a2c",
+      "occurredAt": "2026-06-01T09:00:00.000Z",
+      "metadata": {
+        "idempotencyKey": "m1-place",
+        "commandType": "PlaceOrder",
+        "commandFingerprint": "01584589abad0f10fda8809aebd1c1ae5969b20ce4547bfec114ef7a6bee87fa"
+      },
+      "aggregateType": "order",
+      "aggregateId": "m1",
+      "sequence": 3,
+      "position": 7
+    },
+    {
+      "type": "StockReserved",
+      "version": 1,
+      "payload": {
+        "orderId": "m1",
+        "quantity": 1,
+        "expiresAt": "2026-06-01T09:15:00.000Z"
+      },
+      "eventId": "0cf59d6c-2b1d-432f-9899-1b496519ef1a",
+      "occurredAt": "2026-06-01T09:00:00.000Z",
+      "metadata": {
+        "idempotencyKey": "a1568ae0-9fa6-4aca-a01f-6a155e825a2c:reserve:MUG",
+        "commandType": "ReserveStock",
+        "commandFingerprint": "8ef170e9a5b8af659ffdd77092e505802df973cc688724e7a066b945ac0b2537",
+        "correlationId": "m1",
+        "causationId": "a1568ae0-9fa6-4aca-a01f-6a155e825a2c"
+      },
+      "aggregateType": "inventory-item",
+      "aggregateId": "MUG",
+      "sequence": 3,
+      "position": 8
+    },
+    {
+      "type": "OrderStockReserved",
+      "version": 1,
+      "payload": {},
+      "eventId": "f9ada6fe-4bff-46ea-b211-1c6d3ec53b7d",
+      "occurredAt": "2026-06-01T09:00:00.000Z",
+      "metadata": {
+        "idempotencyKey": "a1568ae0-9fa6-4aca-a01f-6a155e825a2c:stock-reserved",
+        "commandType": "RecordOrderStockReserved",
+        "commandFingerprint": "bce9ec7a20163b5bf1a0a39e520c3e34f9893cc199d62a1992221ea0b9126d03",
+        "correlationId": "m1",
+        "causationId": "a1568ae0-9fa6-4aca-a01f-6a155e825a2c"
+      },
+      "aggregateType": "order",
+      "aggregateId": "m1",
+      "sequence": 4,
+      "position": 9
+    },
+    {
+      "type": "OrderCreated",
+      "version": 1,
+      "payload": {
+        "customerId": "customer-m2",
+        "shippingRegion": "US-OR"
+      },
+      "eventId": "2379c002-a016-47f4-8229-a34e904b0119",
+      "occurredAt": "2026-06-01T09:00:00.000Z",
+      "metadata": {
+        "idempotencyKey": "m2-create",
+        "commandType": "CreateOrder",
+        "commandFingerprint": "c7321b9bd451f25038ccb21d5ba7eba7ac4edb05fa2daba461635feeb3c0288f"
+      },
+      "aggregateType": "order",
+      "aggregateId": "m2",
+      "sequence": 1,
+      "position": 10
+    },
+    {
+      "type": "OrderLineAdded",
+      "version": 1,
+      "payload": {
+        "lineId": "m2-l1",
+        "sku": "MUG",
+        "quantity": 2,
+        "unitPriceCents": 1000
+      },
+      "eventId": "6f88f008-194c-4163-b00b-93e5184117bf",
+      "occurredAt": "2026-06-01T09:00:00.000Z",
+      "metadata": {
+        "idempotencyKey": "m2-line",
+        "commandType": "AddOrderLine",
+        "commandFingerprint": "f2d0c8a6e368e4e5af9765d22ded73865a38e7b1409d7dacab98305decc85ae7"
+      },
+      "aggregateType": "order",
+      "aggregateId": "m2",
+      "sequence": 2,
+      "position": 11
+    },
+    {
+      "type": "OrderPlaced",
+      "version": 1,
+      "payload": {
+        "pricing": {
+          "lines": [
+            {
+              "lineId": "m2-l1",
+              "sku": "MUG",
+              "quantity": 2,
+              "unitPriceCents": 1000,
+              "grossCents": 2000,
+              "discountCents": 0,
+              "netCents": 2000,
+              "couponCents": 0,
+              "taxCents": 0,
+              "totalCents": 2000
+            }
+          ],
+          "discountCodes": [],
+          "subtotalCents": 2000,
+          "discountCents": 0,
+          "discountedSubtotalCents": 2000,
+          "couponCents": 0,
+          "taxableCents": 2000,
+          "taxRateBasisPoints": 0,
+          "taxCents": 0,
+          "totalCents": 2000
+        },
+        "reservationExpiresAt": "2026-06-01T09:15:00.000Z"
+      },
+      "eventId": "94385a20-75ff-48d7-be36-0c4e5920c5ee",
+      "occurredAt": "2026-06-01T09:00:00.000Z",
+      "metadata": {
+        "idempotencyKey": "m2-place",
+        "commandType": "PlaceOrder",
+        "commandFingerprint": "f49d2cd08faf7f5378abd6cf83a74a853c47e78878a174c6c7c113589519ecb5"
+      },
+      "aggregateType": "order",
+      "aggregateId": "m2",
+      "sequence": 3,
+      "position": 12
+    },
+    {
+      "type": "OrderCreated",
+      "version": 1,
+      "payload": {
+        "customerId": "customer-c1",
+        "shippingRegion": "US-OR"
+      },
+      "eventId": "6e9477a9-c86d-41c0-99db-293a9af22a94",
+      "occurredAt": "2026-06-01T09:05:00.000Z",
+      "metadata": {
+        "idempotencyKey": "c1-create",
+        "commandType": "CreateOrder",
+        "commandFingerprint": "676591e6c40f623b034bd305425809709a6748e62a671b9d18fcdf649154813c"
+      },
+      "aggregateType": "order",
+      "aggregateId": "c1",
+      "sequence": 1,
+      "position": 13
+    },
+    {
+      "type": "OrderLineAdded",
+      "version": 1,
+      "payload": {
+        "lineId": "c1-l1",
+        "sku": "CUP",
+        "quantity": 3,
+        "unitPriceCents": 500
+      },
+      "eventId": "b632a145-9201-4949-88a4-6065f7479d61",
+      "occurredAt": "2026-06-01T09:05:00.000Z",
+      "metadata": {
+        "idempotencyKey": "c1-line",
+        "commandType": "AddOrderLine",
+        "commandFingerprint": "e5aaefe513625a20e9761cf82429f50f72d8769a96be733f5867be4250964e34"
+      },
+      "aggregateType": "order",
+      "aggregateId": "c1",
+      "sequence": 2,
+      "position": 14
+    },
+    {
+      "type": "OrderPlaced",
+      "version": 1,
+      "payload": {
+        "pricing": {
+          "lines": [
+            {
+              "lineId": "c1-l1",
+              "sku": "CUP",
+              "quantity": 3,
+              "unitPriceCents": 500,
+              "grossCents": 1500,
+              "discountCents": 0,
+              "netCents": 1500,
+              "couponCents": 0,
+              "taxCents": 0,
+              "totalCents": 1500
+            }
+          ],
+          "discountCodes": [],
+          "subtotalCents": 1500,
+          "discountCents": 0,
+          "discountedSubtotalCents": 1500,
+          "couponCents": 0,
+          "taxableCents": 1500,
+          "taxRateBasisPoints": 0,
+          "taxCents": 0,
+          "totalCents": 1500
+        },
+        "reservationExpiresAt": "2026-06-01T09:20:00.000Z"
+      },
+      "eventId": "0440d602-f176-4cbd-807c-ad64a66c424d",
+      "occurredAt": "2026-06-01T09:05:00.000Z",
+      "metadata": {
+        "idempotencyKey": "c1-place",
+        "commandType": "PlaceOrder",
+        "commandFingerprint": "602baf82a17e190285cc79ed37c085d70ac33a08dcf43a8d06405542a0368dd7"
+      },
+      "aggregateType": "order",
+      "aggregateId": "c1",
+      "sequence": 3,
+      "position": 15
+    },
+    {
+      "type": "StockReserved",
+      "version": 1,
+      "payload": {
+        "orderId": "m2",
+        "quantity": 2,
+        "expiresAt": "2026-06-01T09:15:00.000Z"
+      },
+      "eventId": "78d42040-0149-4e03-8b42-a6fc07bbb5e0",
+      "occurredAt": "2026-06-01T09:05:00.000Z",
+      "metadata": {
+        "idempotencyKey": "94385a20-75ff-48d7-be36-0c4e5920c5ee:reserve:MUG",
+        "commandType": "ReserveStock",
+        "commandFingerprint": "1a13d18125a42084bfd83c469ad3b262025cd8bbe61d84a8c1ccffbd7382cf69",
+        "correlationId": "m2",
+        "causationId": "94385a20-75ff-48d7-be36-0c4e5920c5ee"
+      },
+      "aggregateType": "inventory-item",
+      "aggregateId": "MUG",
+      "sequence": 4,
+      "position": 16
+    },
+    {
+      "type": "OrderStockReserved",
+      "version": 1,
+      "payload": {},
+      "eventId": "64ca30dc-b403-4f74-b6ae-b32367ad5c4e",
+      "occurredAt": "2026-06-01T09:05:00.000Z",
+      "metadata": {
+        "idempotencyKey": "94385a20-75ff-48d7-be36-0c4e5920c5ee:stock-reserved",
+        "commandType": "RecordOrderStockReserved",
+        "commandFingerprint": "99897bef7e668ca4a3e06c9a4e847d0523daad545928e76e010c4750b5cf6112",
+        "correlationId": "m2",
+        "causationId": "94385a20-75ff-48d7-be36-0c4e5920c5ee"
+      },
+      "aggregateType": "order",
+      "aggregateId": "m2",
+      "sequence": 4,
+      "position": 17
+    },
+    {
+      "type": "StockReservationRejected",
+      "version": 1,
+      "payload": {
+        "orderId": "c1",
+        "requested": 3,
+        "available": 2
+      },
+      "eventId": "2974257b-a8ae-457f-b227-c2f93cff3318",
+      "occurredAt": "2026-06-01T09:05:00.000Z",
+      "metadata": {
+        "idempotencyKey": "0440d602-f176-4cbd-807c-ad64a66c424d:reserve:CUP",
+        "commandType": "ReserveStock",
+        "commandFingerprint": "fd87cdffee53c81e59661c1de6dcded0dffe56fd736cf27ff6464d18de2af832",
+        "correlationId": "c1",
+        "causationId": "0440d602-f176-4cbd-807c-ad64a66c424d"
+      },
+      "aggregateType": "inventory-item",
+      "aggregateId": "CUP",
+      "sequence": 3,
+      "position": 18
+    },
+    {
+      "type": "OrderCancelled",
+      "version": 1,
+      "payload": {
+        "reason": "out-of-stock"
+      },
+      "eventId": "11a2ee56-dd3d-4e01-9e38-98a741829fe4",
+      "occurredAt": "2026-06-01T09:05:00.000Z",
+      "metadata": {
+        "idempotencyKey": "0440d602-f176-4cbd-807c-ad64a66c424d:cancel-out-of-stock",
+        "commandType": "CancelOrder",
+        "commandFingerprint": "1746ff2191da40bf2d4e229a7b98a584823f3329594b1a37d870baeecb19da3e",
+        "correlationId": "c1",
+        "causationId": "0440d602-f176-4cbd-807c-ad64a66c424d"
+      },
+      "aggregateType": "order",
+      "aggregateId": "c1",
+      "sequence": 4,
+      "position": 19
+    },
+    {
+      "type": "OrderCreated",
+      "version": 1,
+      "payload": {
+        "customerId": "customer-p1",
+        "shippingRegion": "US-OR"
+      },
+      "eventId": "660c6a56-688d-464f-ba22-28661b848d00",
+      "occurredAt": "2026-06-01T09:05:00.000Z",
+      "metadata": {
+        "idempotencyKey": "p1-create",
+        "commandType": "CreateOrder",
+        "commandFingerprint": "d3ddd06cd4fff66f929e4976970ddfe7873a411be40fcb4ec22e2d078879fbbe"
+      },
+      "aggregateType": "order",
+      "aggregateId": "p1",
+      "sequence": 1,
+      "position": 20
+    },
+    {
+      "type": "OrderLineAdded",
+      "version": 1,
+      "payload": {
+        "lineId": "p1-l1",
+        "sku": "MUG",
+        "quantity": 1,
+        "unitPriceCents": 1000
+      },
+      "eventId": "025f1c08-ef1d-41c4-9d9b-e188c6cf016c",
+      "occurredAt": "2026-06-01T09:05:00.000Z",
+      "metadata": {
+        "idempotencyKey": "p1-line",
+        "commandType": "AddOrderLine",
+        "commandFingerprint": "369ccef01afd566ad12de3f4501ec9f3e2d2666c18f1ed6b56945d985d4f4000"
+      },
+      "aggregateType": "order",
+      "aggregateId": "p1",
+      "sequence": 2,
+      "position": 21
+    },
+    {
+      "type": "OrderPlaced",
+      "version": 1,
+      "payload": {
+        "pricing": {
+          "lines": [
+            {
+              "lineId": "p1-l1",
+              "sku": "MUG",
+              "quantity": 1,
+              "unitPriceCents": 1000,
+              "grossCents": 1000,
+              "discountCents": 0,
+              "netCents": 1000,
+              "couponCents": 0,
+              "taxCents": 0,
+              "totalCents": 1000
+            }
+          ],
+          "discountCodes": [],
+          "subtotalCents": 1000,
+          "discountCents": 0,
+          "discountedSubtotalCents": 1000,
+          "couponCents": 0,
+          "taxableCents": 1000,
+          "taxRateBasisPoints": 0,
+          "taxCents": 0,
+          "totalCents": 1000
+        },
+        "reservationExpiresAt": "2026-06-01T09:20:00.000Z"
+      },
+      "eventId": "847c7aa2-aa5b-4218-8475-8c7364d01cef",
+      "occurredAt": "2026-06-01T09:05:00.000Z",
+      "metadata": {
+        "idempotencyKey": "p1-place",
+        "commandType": "PlaceOrder",
+        "commandFingerprint": "b7055f61a3ca9bcb2d43faba516809b0645a244728c383a33272ff52a2d07d2b"
+      },
+      "aggregateType": "order",
+      "aggregateId": "p1",
+      "sequence": 3,
+      "position": 22
+    },
+    {
+      "type": "StockReserved",
+      "version": 1,
+      "payload": {
+        "orderId": "p1",
+        "quantity": 1,
+        "expiresAt": "2026-06-01T09:20:00.000Z"
+      },
+      "eventId": "d2eaea71-01ee-46bc-be0e-b276c702cdde",
+      "occurredAt": "2026-06-01T09:05:00.000Z",
+      "metadata": {
+        "idempotencyKey": "847c7aa2-aa5b-4218-8475-8c7364d01cef:reserve:MUG",
+        "commandType": "ReserveStock",
+        "commandFingerprint": "c7066c4197c21f44d3a1cc0b8ba82aea8aed272db262e98e1c3fa75d94564b97",
+        "correlationId": "p1",
+        "causationId": "847c7aa2-aa5b-4218-8475-8c7364d01cef"
+      },
+      "aggregateType": "inventory-item",
+      "aggregateId": "MUG",
+      "sequence": 5,
+      "position": 23
+    },
+    {
+      "type": "OrderStockReserved",
+      "version": 1,
+      "payload": {},
+      "eventId": "a87e11ee-d559-461e-9e31-5646296b2d2c",
+      "occurredAt": "2026-06-01T09:05:00.000Z",
+      "metadata": {
+        "idempotencyKey": "847c7aa2-aa5b-4218-8475-8c7364d01cef:stock-reserved",
+        "commandType": "RecordOrderStockReserved",
+        "commandFingerprint": "bd3f7e29933e39d2e1b1ab6cd355fae095ad81288e36c7d447048fc4f8935a0a",
+        "correlationId": "p1",
+        "causationId": "847c7aa2-aa5b-4218-8475-8c7364d01cef"
+      },
+      "aggregateType": "order",
+      "aggregateId": "p1",
+      "sequence": 4,
+      "position": 24
+    },
+    {
+      "type": "PaymentCaptured",
+      "version": 1,
+      "payload": {
+        "paymentId": "pay-p1",
+        "orderId": "p1",
+        "customerId": "customer-p1",
+        "amountCents": 1000,
+        "method": "card"
+      },
+      "eventId": "d9dad82a-596c-404b-90df-53bff768a363",
+      "occurredAt": "2026-06-01T09:05:00.000Z",
+      "metadata": {
+        "idempotencyKey": "p1-pay",
+        "commandType": "CapturePayment",
+        "commandFingerprint": "f7bb1efa5d4ec3ea6dd6421c2dcf1dc6be69ab6bd8dc6c67c7cd5505ee20bfd3"
+      },
+      "aggregateType": "payment",
+      "aggregateId": "pay-p1",
+      "sequence": 1,
+      "position": 25
+    },
+    {
+      "type": "OrderPaid",
+      "version": 1,
+      "payload": {
+        "paymentId": "pay-p1",
+        "amountCents": 1000
+      },
+      "eventId": "ef09d849-dc8b-464c-bf67-fa3070fc6b24",
+      "occurredAt": "2026-06-01T09:05:00.000Z",
+      "metadata": {
+        "idempotencyKey": "d9dad82a-596c-404b-90df-53bff768a363:mark-paid",
+        "commandType": "MarkOrderPaid",
+        "commandFingerprint": "e5e3cce94237a993bfd099b561b84c173ceda62a924355c302bbf50ca9d55cd7",
+        "correlationId": "pay-p1",
+        "causationId": "d9dad82a-596c-404b-90df-53bff768a363"
+      },
+      "aggregateType": "order",
+      "aggregateId": "p1",
+      "sequence": 5,
+      "position": 26
+    },
+    {
+      "type": "StockReservationConfirmed",
+      "version": 1,
+      "payload": {
+        "orderId": "p1",
+        "quantity": 1
+      },
+      "eventId": "53a8381c-51c4-4e98-96dc-57d30c0515c8",
+      "occurredAt": "2026-06-01T09:05:00.000Z",
+      "metadata": {
+        "idempotencyKey": "ef09d849-dc8b-464c-bf67-fa3070fc6b24:confirm:MUG",
+        "commandType": "ConfirmStockReservation",
+        "commandFingerprint": "0ab59cff3735d8ae5be77c3a7ff683e73039ee7f85fa3601f1bee1b2d4f402f0",
+        "correlationId": "pay-p1",
+        "causationId": "ef09d849-dc8b-464c-bf67-fa3070fc6b24"
+      },
+      "aggregateType": "inventory-item",
+      "aggregateId": "MUG",
+      "sequence": 6,
+      "position": 27
+    },
+    {
+      "type": "OrderCancelled",
+      "version": 1,
+      "payload": {
+        "reason": "reservation-expired"
+      },
+      "eventId": "24ff2e16-5c12-4427-b77f-378001c5e4e4",
+      "occurredAt": "2026-06-01T09:15:00.000Z",
+      "metadata": {
+        "idempotencyKey": "expire-reservation:m1",
+        "commandType": "ExpireOrderReservation",
+        "commandFingerprint": "c9a4a738b83a3f5457e98b67b48f42ace1c3300f41f2ade483e5a88dfc0902c9"
+      },
+      "aggregateType": "order",
+      "aggregateId": "m1",
+      "sequence": 5,
+      "position": 28
+    },
+    {
+      "type": "OrderCancelled",
+      "version": 1,
+      "payload": {
+        "reason": "reservation-expired"
+      },
+      "eventId": "2d1a6288-121c-4c6a-b1dd-6e219e1a9155",
+      "occurredAt": "2026-06-01T09:15:00.000Z",
+      "metadata": {
+        "idempotencyKey": "expire-reservation:m2",
+        "commandType": "ExpireOrderReservation",
+        "commandFingerprint": "d86325d86a7392dc7946320e3512627326e2c79448133c0a727a555e8ef94810"
+      },
+      "aggregateType": "order",
+      "aggregateId": "m2",
+      "sequence": 5,
+      "position": 29
+    },
+    {
+      "type": "StockReservationReleased",
+      "version": 1,
+      "payload": {
+        "orderId": "m1",
+        "quantity": 1,
+        "reason": "reservation-expired"
+      },
+      "eventId": "74af8a7f-29db-4ccb-9445-aab6f3bf6bb7",
+      "occurredAt": "2026-06-01T09:15:00.000Z",
+      "metadata": {
+        "idempotencyKey": "24ff2e16-5c12-4427-b77f-378001c5e4e4:release:MUG",
+        "commandType": "ReleaseStock",
+        "commandFingerprint": "7a2119c3dcca5d0b8af980698354d4cadcbb95d856d4729194faa84899bc53f5",
+        "correlationId": "m1",
+        "causationId": "24ff2e16-5c12-4427-b77f-378001c5e4e4"
+      },
+      "aggregateType": "inventory-item",
+      "aggregateId": "MUG",
+      "sequence": 7,
+      "position": 30
+    },
+    {
+      "type": "StockReservationReleased",
+      "version": 1,
+      "payload": {
+        "orderId": "m2",
+        "quantity": 2,
+        "reason": "reservation-expired"
+      },
+      "eventId": "053e9a3e-b665-4134-b992-5b0341b8e0a0",
+      "occurredAt": "2026-06-01T09:15:00.000Z",
+      "metadata": {
+        "idempotencyKey": "2d1a6288-121c-4c6a-b1dd-6e219e1a9155:release:MUG",
+        "commandType": "ReleaseStock",
+        "commandFingerprint": "72721fcf056f894a98fcdbddd7024e1e09eb3d05b72d25caa3603eb253f02c60",
+        "correlationId": "m2",
+        "causationId": "2d1a6288-121c-4c6a-b1dd-6e219e1a9155"
+      },
+      "aggregateType": "inventory-item",
+      "aggregateId": "MUG",
+      "sequence": 8,
+      "position": 31
+    },
+    {
+      "type": "OrderCreated",
+      "version": 1,
+      "payload": {
+        "customerId": "customer-m3",
+        "shippingRegion": "US-OR"
+      },
+      "eventId": "faa6c5ec-02de-449f-ab39-444ff70ef89e",
+      "occurredAt": "2026-06-01T09:15:00.000Z",
+      "metadata": {
+        "idempotencyKey": "m3-create",
+        "commandType": "CreateOrder",
+        "commandFingerprint": "86f5bc51805c4465649d4979c28c6849f7e77d26996cb0e119b233f0cd91269c"
+      },
+      "aggregateType": "order",
+      "aggregateId": "m3",
+      "sequence": 1,
+      "position": 32
+    },
+    {
+      "type": "OrderLineAdded",
+      "version": 1,
+      "payload": {
+        "lineId": "m3-l1",
+        "sku": "MUG",
+        "quantity": 1,
+        "unitPriceCents": 1000
+      },
+      "eventId": "b451ff42-07c0-4eee-941c-fd26997849a0",
+      "occurredAt": "2026-06-01T09:15:00.000Z",
+      "metadata": {
+        "idempotencyKey": "m3-line",
+        "commandType": "AddOrderLine",
+        "commandFingerprint": "d132b95f7287fff11fa11de441a38ae20118160121376a87666d7d4c937ede99"
+      },
+      "aggregateType": "order",
+      "aggregateId": "m3",
+      "sequence": 2,
+      "position": 33
+    },
+    {
+      "type": "OrderPlaced",
+      "version": 1,
+      "payload": {
+        "pricing": {
+          "lines": [
+            {
+              "lineId": "m3-l1",
+              "sku": "MUG",
+              "quantity": 1,
+              "unitPriceCents": 1000,
+              "grossCents": 1000,
+              "discountCents": 0,
+              "netCents": 1000,
+              "couponCents": 0,
+              "taxCents": 0,
+              "totalCents": 1000
+            }
+          ],
+          "discountCodes": [],
+          "subtotalCents": 1000,
+          "discountCents": 0,
+          "discountedSubtotalCents": 1000,
+          "couponCents": 0,
+          "taxableCents": 1000,
+          "taxRateBasisPoints": 0,
+          "taxCents": 0,
+          "totalCents": 1000
+        },
+        "reservationExpiresAt": "2026-06-01T09:30:00.000Z"
+      },
+      "eventId": "f2d38727-716d-489e-9891-07f906318d80",
+      "occurredAt": "2026-06-01T09:15:00.000Z",
+      "metadata": {
+        "idempotencyKey": "m3-place",
+        "commandType": "PlaceOrder",
+        "commandFingerprint": "0117988a526a8f47170f508e477e0f7a71ccedd61ccde3fcd4436e89c5fb41c1"
+      },
+      "aggregateType": "order",
+      "aggregateId": "m3",
+      "sequence": 3,
+      "position": 34
+    },
+    {
+      "type": "OrderCancelled",
+      "version": 1,
+      "payload": {
+        "reason": "customer-request"
+      },
+      "eventId": "b587d2f6-d46a-4b9d-901c-dd9ebd2fca22",
+      "occurredAt": "2026-06-01T09:15:00.000Z",
+      "metadata": {
+        "idempotencyKey": "m3-cancel",
+        "commandType": "CancelOrder",
+        "commandFingerprint": "0ddf728211fe91c65070a67636722f1f40104117faa820de0b7fc0df9977185e"
+      },
+      "aggregateType": "order",
+      "aggregateId": "m3",
+      "sequence": 4,
+      "position": 35
+    },
+    {
+      "type": "OrderCreated",
+      "version": 1,
+      "payload": {
+        "customerId": "customer-m4",
+        "shippingRegion": "US-OR"
+      },
+      "eventId": "eab749e5-b4f8-480a-b596-19756fd4a48b",
+      "occurredAt": "2026-06-01T09:15:00.000Z",
+      "metadata": {
+        "idempotencyKey": "m4-create",
+        "commandType": "CreateOrder",
+        "commandFingerprint": "3e88787427d81d62622b144791db2c350b399d6af4e65b80029d9df5d03848af"
+      },
+      "aggregateType": "order",
+      "aggregateId": "m4",
+      "sequence": 1,
+      "position": 36
+    },
+    {
+      "type": "OrderLineAdded",
+      "version": 1,
+      "payload": {
+        "lineId": "m4-l1",
+        "sku": "MUG",
+        "quantity": 1,
+        "unitPriceCents": 1000
+      },
+      "eventId": "236272d7-f088-4653-a263-aeec4ed758dd",
+      "occurredAt": "2026-06-01T09:15:00.000Z",
+      "metadata": {
+        "idempotencyKey": "m4-line",
+        "commandType": "AddOrderLine",
+        "commandFingerprint": "d04bb3d2f765fd56acc8af0a4096fcfebde666f2e40ef7e924fe3ab7ff0cd033"
+      },
+      "aggregateType": "order",
+      "aggregateId": "m4",
+      "sequence": 2,
+      "position": 37
+    },
+    {
+      "type": "OrderPlaced",
+      "version": 1,
+      "payload": {
+        "pricing": {
+          "lines": [
+            {
+              "lineId": "m4-l1",
+              "sku": "MUG",
+              "quantity": 1,
+              "unitPriceCents": 1000,
+              "grossCents": 1000,
+              "discountCents": 0,
+              "netCents": 1000,
+              "couponCents": 0,
+              "taxCents": 0,
+              "totalCents": 1000
+            }
+          ],
+          "discountCodes": [],
+          "subtotalCents": 1000,
+          "discountCents": 0,
+          "discountedSubtotalCents": 1000,
+          "couponCents": 0,
+          "taxableCents": 1000,
+          "taxRateBasisPoints": 0,
+          "taxCents": 0,
+          "totalCents": 1000
+        },
+        "reservationExpiresAt": "2026-06-01T09:30:00.000Z"
+      },
+      "eventId": "3e42003a-58b5-4be7-9d07-8d89ac856830",
+      "occurredAt": "2026-06-01T09:15:00.000Z",
+      "metadata": {
+        "idempotencyKey": "m4-place",
+        "commandType": "PlaceOrder",
+        "commandFingerprint": "8c23a0803e287a5f99f679b27f0328dad40355f1ae34d136896944d8dd0cd1d1"
+      },
+      "aggregateType": "order",
+      "aggregateId": "m4",
+      "sequence": 3,
+      "position": 38
+    },
+    {
+      "type": "StockReserved",
+      "version": 1,
+      "payload": {
+        "orderId": "m4",
+        "quantity": 1,
+        "expiresAt": "2026-06-01T09:30:00.000Z"
+      },
+      "eventId": "9e9a710b-07ff-42fb-8a2b-49a9154611d4",
+      "occurredAt": "2026-06-01T09:15:00.000Z",
+      "metadata": {
+        "idempotencyKey": "3e42003a-58b5-4be7-9d07-8d89ac856830:reserve:MUG",
+        "commandType": "ReserveStock",
+        "commandFingerprint": "5d511da10fa9fc42575b70e3218fcfe0867571bacda93c95959ece21e73bb5ee",
+        "correlationId": "m4",
+        "causationId": "3e42003a-58b5-4be7-9d07-8d89ac856830"
+      },
+      "aggregateType": "inventory-item",
+      "aggregateId": "MUG",
+      "sequence": 9,
+      "position": 39
+    },
+    {
+      "type": "OrderStockReserved",
+      "version": 1,
+      "payload": {},
+      "eventId": "f9217fe9-b3cb-4dea-adc9-8d48fa8298bd",
+      "occurredAt": "2026-06-01T09:15:00.000Z",
+      "metadata": {
+        "idempotencyKey": "3e42003a-58b5-4be7-9d07-8d89ac856830:stock-reserved",
+        "commandType": "RecordOrderStockReserved",
+        "commandFingerprint": "3666c79cd1accfb5f2267834d915e4789a7ec700fb7b8ec2e0e90eaacb1458ca",
+        "correlationId": "m4",
+        "causationId": "3e42003a-58b5-4be7-9d07-8d89ac856830"
+      },
+      "aggregateType": "order",
+      "aggregateId": "m4",
+      "sequence": 4,
+      "position": 40
+    },
+    {
+      "type": "OrderCreated",
+      "version": 1,
+      "payload": {
+        "customerId": "customer-p2",
+        "shippingRegion": "US-OR"
+      },
+      "eventId": "17c6ec01-3fe6-48d3-a2f3-40b585c41b33",
+      "occurredAt": "2026-06-01T09:22:00.000Z",
+      "metadata": {
+        "idempotencyKey": "p2-create",
+        "commandType": "CreateOrder",
+        "commandFingerprint": "7e6bddbb1ab95cf504d5d5fdcf33752366264533ad000c7fd5bebcf845aee5ee"
+      },
+      "aggregateType": "order",
+      "aggregateId": "p2",
+      "sequence": 1,
+      "position": 41
+    },
+    {
+      "type": "OrderLineAdded",
+      "version": 1,
+      "payload": {
+        "lineId": "p2-l1",
+        "sku": "MUG",
+        "quantity": 1,
+        "unitPriceCents": 1000
+      },
+      "eventId": "fd863248-c577-4ba4-ba34-c56288666b86",
+      "occurredAt": "2026-06-01T09:22:00.000Z",
+      "metadata": {
+        "idempotencyKey": "p2-line",
+        "commandType": "AddOrderLine",
+        "commandFingerprint": "bb8b15f2a4b5dc955a6a376f43196d1afee78f1bb6dae48be98fb1c8a60f5939"
+      },
+      "aggregateType": "order",
+      "aggregateId": "p2",
+      "sequence": 2,
+      "position": 42
+    },
+    {
+      "type": "OrderPlaced",
+      "version": 1,
+      "payload": {
+        "pricing": {
+          "lines": [
+            {
+              "lineId": "p2-l1",
+              "sku": "MUG",
+              "quantity": 1,
+              "unitPriceCents": 1000,
+              "grossCents": 1000,
+              "discountCents": 0,
+              "netCents": 1000,
+              "couponCents": 0,
+              "taxCents": 0,
+              "totalCents": 1000
+            }
+          ],
+          "discountCodes": [],
+          "subtotalCents": 1000,
+          "discountCents": 0,
+          "discountedSubtotalCents": 1000,
+          "couponCents": 0,
+          "taxableCents": 1000,
+          "taxRateBasisPoints": 0,
+          "taxCents": 0,
+          "totalCents": 1000
+        },
+        "reservationExpiresAt": "2026-06-01T09:37:00.000Z"
+      },
+      "eventId": "2e4d5632-157b-4682-9a09-7a8c2a5748bf",
+      "occurredAt": "2026-06-01T09:22:00.000Z",
+      "metadata": {
+        "idempotencyKey": "p2-place",
+        "commandType": "PlaceOrder",
+        "commandFingerprint": "1262191c8ac863c17dd30fb8850b8c735900eb269d67bdb01886a9fb6895e9f9"
+      },
+      "aggregateType": "order",
+      "aggregateId": "p2",
+      "sequence": 3,
+      "position": 43
+    },
+    {
+      "type": "StockReserved",
+      "version": 1,
+      "payload": {
+        "orderId": "p2",
+        "quantity": 1,
+        "expiresAt": "2026-06-01T09:37:00.000Z"
+      },
+      "eventId": "aff70ab6-e1d8-42aa-9c6f-0a02a3ef5a64",
+      "occurredAt": "2026-06-01T09:22:00.000Z",
+      "metadata": {
+        "idempotencyKey": "2e4d5632-157b-4682-9a09-7a8c2a5748bf:reserve:MUG",
+        "commandType": "ReserveStock",
+        "commandFingerprint": "6e16640fdc64bbb04f06b8475f7fcf1a7dfcbade1c79193cccd193cfe0d4ac67",
+        "correlationId": "p2",
+        "causationId": "2e4d5632-157b-4682-9a09-7a8c2a5748bf"
+      },
+      "aggregateType": "inventory-item",
+      "aggregateId": "MUG",
+      "sequence": 10,
+      "position": 44
+    },
+    {
+      "type": "OrderStockReserved",
+      "version": 1,
+      "payload": {},
+      "eventId": "e966147c-0966-4b32-9b7d-55ce132273f0",
+      "occurredAt": "2026-06-01T09:22:00.000Z",
+      "metadata": {
+        "idempotencyKey": "2e4d5632-157b-4682-9a09-7a8c2a5748bf:stock-reserved",
+        "commandType": "RecordOrderStockReserved",
+        "commandFingerprint": "19e4e6993e0172f188a6a0b3c40802a9cb006ac47ec23d1dfa7dab10da956e59",
+        "correlationId": "p2",
+        "causationId": "2e4d5632-157b-4682-9a09-7a8c2a5748bf"
+      },
+      "aggregateType": "order",
+      "aggregateId": "p2",
+      "sequence": 4,
+      "position": 45
+    },
+    {
+      "type": "PaymentCaptured",
+      "version": 1,
+      "payload": {
+        "paymentId": "pay-p2",
+        "orderId": "p2",
+        "customerId": "customer-p2",
+        "amountCents": 1000,
+        "method": "card"
+      },
+      "eventId": "ec57af24-3585-4b77-9c2a-51a946d367f0",
+      "occurredAt": "2026-06-01T09:22:00.000Z",
+      "metadata": {
+        "idempotencyKey": "p2-pay",
+        "commandType": "CapturePayment",
+        "commandFingerprint": "b57ea107f97cfee8d8d972a2cd59da7b5b783efe8ecb6dd01d39d4f3bbcf44b2"
+      },
+      "aggregateType": "payment",
+      "aggregateId": "pay-p2",
+      "sequence": 1,
+      "position": 46
+    },
+    {
+      "type": "OrderPaid",
+      "version": 1,
+      "payload": {
+        "paymentId": "pay-p2",
+        "amountCents": 1000
+      },
+      "eventId": "512a2889-0f7b-475e-a867-1817ff6dbbed",
+      "occurredAt": "2026-06-01T09:22:00.000Z",
+      "metadata": {
+        "idempotencyKey": "ec57af24-3585-4b77-9c2a-51a946d367f0:mark-paid",
+        "commandType": "MarkOrderPaid",
+        "commandFingerprint": "c5f474fc770fdd85e84b2a85102fb6995d21a2ac23ef66064f9e1cde3aa63cdf",
+        "correlationId": "pay-p2",
+        "causationId": "ec57af24-3585-4b77-9c2a-51a946d367f0"
+      },
+      "aggregateType": "order",
+      "aggregateId": "p2",
+      "sequence": 5,
+      "position": 47
+    },
+    {
+      "type": "StockReservationConfirmed",
+      "version": 1,
+      "payload": {
+        "orderId": "p2",
+        "quantity": 1
+      },
+      "eventId": "858fa671-fb26-4ddd-9b5c-d40db2318dc5",
+      "occurredAt": "2026-06-01T09:22:00.000Z",
+      "metadata": {
+        "idempotencyKey": "512a2889-0f7b-475e-a867-1817ff6dbbed:confirm:MUG",
+        "commandType": "ConfirmStockReservation",
+        "commandFingerprint": "3663443021f59b65e481ee5f0909c9fdeb9c93b972a99a53a213feffedde19f1",
+        "correlationId": "pay-p2",
+        "causationId": "512a2889-0f7b-475e-a867-1817ff6dbbed"
+      },
+      "aggregateType": "inventory-item",
+      "aggregateId": "MUG",
+      "sequence": 11,
+      "position": 48
+    },
+    {
+      "type": "OrderCancelled",
+      "version": 1,
+      "payload": {
+        "reason": "reservation-expired"
+      },
+      "eventId": "8c2c135a-1883-45d8-be2c-3abbd98aa4d4",
+      "occurredAt": "2026-06-01T09:30:00.000Z",
+      "metadata": {
+        "idempotencyKey": "expire-reservation:m4",
+        "commandType": "ExpireOrderReservation",
+        "commandFingerprint": "c39757240b676beae802aecb1b765c6898ee8b014f480b410de02c2f72f5f27b"
+      },
+      "aggregateType": "order",
+      "aggregateId": "m4",
+      "sequence": 5,
+      "position": 49
+    },
+    {
+      "type": "StockReservationReleased",
+      "version": 1,
+      "payload": {
+        "orderId": "m4",
+        "quantity": 1,
+        "reason": "reservation-expired"
+      },
+      "eventId": "053443d0-e892-4493-b330-8a76440ef334",
+      "occurredAt": "2026-06-01T09:30:00.000Z",
+      "metadata": {
+        "idempotencyKey": "8c2c135a-1883-45d8-be2c-3abbd98aa4d4:release:MUG",
+        "commandType": "ReleaseStock",
+        "commandFingerprint": "cd0686177a7b70835733793811a5571078eb5e323eb0d2c8002e65d59ceb2672",
+        "correlationId": "m4",
+        "causationId": "8c2c135a-1883-45d8-be2c-3abbd98aa4d4"
+      },
+      "aggregateType": "inventory-item",
+      "aggregateId": "MUG",
+      "sequence": 12,
+      "position": 50
+    }
+  ],
+  "lines": [
+    "{\"ts\":\"2026-06-01T09:00:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"9b949ff0-7348-4df6-bae4-1035d7f0f884\",\"attempt\":1,\"subscriber\":\"stock-levels\",\"eventId\":\"82f75e6b-87aa-415c-9bad-a88197149222\",\"eventType\":\"InventoryItemRegistered\",\"eventVersion\":1,\"aggregateType\":\"inventory-item\",\"aggregateId\":\"MUG\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:00:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"6b1d6282-d820-4ada-8e2d-b2f7c4d05f5a\",\"attempt\":1,\"subscriber\":\"stock-levels\",\"eventId\":\"2db3218e-46ae-4812-a55a-dadc6080aa55\",\"eventType\":\"InventoryItemRegistered\",\"eventVersion\":1,\"aggregateType\":\"inventory-item\",\"aggregateId\":\"CUP\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:00:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"be59634a-58e3-45f1-8dae-a24c93a0c408\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"bdac4e4a-fa48-4243-8bfd-7fda25833661\",\"eventType\":\"OrderCreated\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m1\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:00:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"d87309d6-24a9-456d-9986-67c6d1fe54c9\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"bdac4e4a-fa48-4243-8bfd-7fda25833661\",\"eventType\":\"OrderCreated\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m1\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:00:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"6b8387e3-ab92-497d-ae78-a851292b1d22\",\"attempt\":1,\"subscriber\":\"stock-levels\",\"eventId\":\"d9cc8066-89bb-444c-947c-983287cf358f\",\"eventType\":\"StockReceived\",\"eventVersion\":1,\"aggregateType\":\"inventory-item\",\"aggregateId\":\"MUG\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:00:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"514ef208-9f83-4968-806e-0c1d0e655232\",\"attempt\":1,\"subscriber\":\"stock-levels\",\"eventId\":\"951f50b1-20a2-4fc7-98da-5cff93980b26\",\"eventType\":\"StockReceived\",\"eventVersion\":1,\"aggregateType\":\"inventory-item\",\"aggregateId\":\"CUP\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:00:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"627c40fa-0681-4204-93a3-f151d7602839\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"bdac4e4a-fa48-4243-8bfd-7fda25833661\",\"eventType\":\"OrderCreated\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m1\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:00:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"7f4c5c6a-86af-4be3-853a-f3b78083a194\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"bdac4e4a-fa48-4243-8bfd-7fda25833661\",\"eventType\":\"OrderCreated\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m1\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:00:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"71cd4438-a281-44e7-bbff-e2756d9deced\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"bbf5e7f7-16c2-4d38-a4e3-a4c60b8bcb1c\",\"eventType\":\"OrderLineAdded\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m1\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:00:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"775722f1-5a58-4f37-8c5b-fb6fbbc07d4b\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"bbf5e7f7-16c2-4d38-a4e3-a4c60b8bcb1c\",\"eventType\":\"OrderLineAdded\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m1\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:00:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"6b5fcc08-c26c-4fc4-8ce5-db8a8e071f76\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"bbf5e7f7-16c2-4d38-a4e3-a4c60b8bcb1c\",\"eventType\":\"OrderLineAdded\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m1\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:00:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"590b0a34-d7a7-4744-a901-1d351e5b073e\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"bbf5e7f7-16c2-4d38-a4e3-a4c60b8bcb1c\",\"eventType\":\"OrderLineAdded\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m1\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:00:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"60aba3cb-eff3-4937-9a58-8a7ea140c293\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"a1568ae0-9fa6-4aca-a01f-6a155e825a2c\",\"eventType\":\"OrderPlaced\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m1\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:00:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"692f2f3e-eb35-42f9-964f-fa7d6f52eaca\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"a1568ae0-9fa6-4aca-a01f-6a155e825a2c\",\"eventType\":\"OrderPlaced\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m1\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:00:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"4d35646f-687b-463b-9f9d-2f8a146b3d08\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"a1568ae0-9fa6-4aca-a01f-6a155e825a2c\",\"eventType\":\"OrderPlaced\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m1\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:00:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"6ad5c6ee-886e-4dbd-8cf1-713f0f9794a3\",\"attempt\":1,\"subscriber\":\"stock-levels\",\"eventId\":\"0cf59d6c-2b1d-432f-9899-1b496519ef1a\",\"eventType\":\"StockReserved\",\"eventVersion\":1,\"aggregateType\":\"inventory-item\",\"aggregateId\":\"MUG\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:00:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"af1c0879-5135-48e8-8ffc-7650a4bc63e1\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"f9ada6fe-4bff-46ea-b211-1c6d3ec53b7d\",\"eventType\":\"OrderStockReserved\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m1\",\"sequence\":4}",
+    "{\"ts\":\"2026-06-01T09:00:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"00b7d8ce-2176-43ff-aa2f-3806d26f2d55\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"f9ada6fe-4bff-46ea-b211-1c6d3ec53b7d\",\"eventType\":\"OrderStockReserved\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m1\",\"sequence\":4}",
+    "{\"ts\":\"2026-06-01T09:00:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"4ecfbac2-83b6-4327-8233-3649e1762ac3\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"a1568ae0-9fa6-4aca-a01f-6a155e825a2c\",\"eventType\":\"OrderPlaced\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m1\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:00:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"d3599561-bd2b-4e02-8ff9-4fc8198e4f80\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"f9ada6fe-4bff-46ea-b211-1c6d3ec53b7d\",\"eventType\":\"OrderStockReserved\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m1\",\"sequence\":4}",
+    "{\"ts\":\"2026-06-01T09:00:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"22bb2401-d11d-470e-b180-50b6a1cff8b8\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"f9ada6fe-4bff-46ea-b211-1c6d3ec53b7d\",\"eventType\":\"OrderStockReserved\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m1\",\"sequence\":4}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"f7471825-dda2-4c60-850f-9c49e0485bc5\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"2379c002-a016-47f4-8229-a34e904b0119\",\"eventType\":\"OrderCreated\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m2\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"0e58b4ba-8727-4e0c-84b1-b05b40b6a016\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"2379c002-a016-47f4-8229-a34e904b0119\",\"eventType\":\"OrderCreated\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m2\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"fb96edd3-238e-43f4-a002-bce878ed030f\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"2379c002-a016-47f4-8229-a34e904b0119\",\"eventType\":\"OrderCreated\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m2\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"ed4f2257-fd8e-4647-a390-7c2c766e0956\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"2379c002-a016-47f4-8229-a34e904b0119\",\"eventType\":\"OrderCreated\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m2\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"169f9375-efdf-4a71-8cdb-cc9a923acd00\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"6f88f008-194c-4163-b00b-93e5184117bf\",\"eventType\":\"OrderLineAdded\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m2\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"3b46df25-ef2b-466e-93ca-53d7d606b32f\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"6f88f008-194c-4163-b00b-93e5184117bf\",\"eventType\":\"OrderLineAdded\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m2\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"458244df-1021-4382-b119-f54261aadf70\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"6f88f008-194c-4163-b00b-93e5184117bf\",\"eventType\":\"OrderLineAdded\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m2\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"23dffc1b-5f40-44fb-a1b3-a7cee5a77ef0\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"6f88f008-194c-4163-b00b-93e5184117bf\",\"eventType\":\"OrderLineAdded\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m2\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"91b369ce-8b28-4d85-823d-6fa380fa953a\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"94385a20-75ff-48d7-be36-0c4e5920c5ee\",\"eventType\":\"OrderPlaced\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m2\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"f20482c4-4d3c-40ac-b97f-1e4b682c8687\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"94385a20-75ff-48d7-be36-0c4e5920c5ee\",\"eventType\":\"OrderPlaced\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m2\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"179af373-bdc3-47fe-a8e2-d4d6368874d9\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"94385a20-75ff-48d7-be36-0c4e5920c5ee\",\"eventType\":\"OrderPlaced\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m2\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"ace94f58-60bc-4016-81f9-07d5ec15b79b\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"6e9477a9-c86d-41c0-99db-293a9af22a94\",\"eventType\":\"OrderCreated\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"c1\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"5439f65c-b5e1-4e72-95b5-2942218cf9f5\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"6e9477a9-c86d-41c0-99db-293a9af22a94\",\"eventType\":\"OrderCreated\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"c1\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"85da93fb-ae9a-4414-9992-aa28eb95031b\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"6e9477a9-c86d-41c0-99db-293a9af22a94\",\"eventType\":\"OrderCreated\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"c1\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"e97127c1-2237-4a35-a5a1-27696221a109\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"6e9477a9-c86d-41c0-99db-293a9af22a94\",\"eventType\":\"OrderCreated\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"c1\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"7191c2df-398c-43ec-9208-5d0fb7002722\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"b632a145-9201-4949-88a4-6065f7479d61\",\"eventType\":\"OrderLineAdded\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"c1\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"b4266f8b-0ca2-4b0c-b7cd-1fc01f55324a\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"b632a145-9201-4949-88a4-6065f7479d61\",\"eventType\":\"OrderLineAdded\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"c1\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"6d910b0b-c1aa-4323-ae0a-94bef2fbb096\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"b632a145-9201-4949-88a4-6065f7479d61\",\"eventType\":\"OrderLineAdded\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"c1\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"bdb52b0a-1f59-4639-9862-0e072b2f2422\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"b632a145-9201-4949-88a4-6065f7479d61\",\"eventType\":\"OrderLineAdded\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"c1\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"4ac3aa5b-52b2-48a7-b746-c976c148627f\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"0440d602-f176-4cbd-807c-ad64a66c424d\",\"eventType\":\"OrderPlaced\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"c1\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"209ede9b-3cac-4862-a1eb-4420055883c8\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"94385a20-75ff-48d7-be36-0c4e5920c5ee\",\"eventType\":\"OrderPlaced\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m2\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"9c3ad909-f95d-44f6-8d60-cc39cede5858\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"0440d602-f176-4cbd-807c-ad64a66c424d\",\"eventType\":\"OrderPlaced\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"c1\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"19856871-8bc5-454f-b0e1-3da9abf36d34\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"0440d602-f176-4cbd-807c-ad64a66c424d\",\"eventType\":\"OrderPlaced\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"c1\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"60b9043c-804c-4bb0-8425-eafcde12b8d4\",\"attempt\":1,\"subscriber\":\"stock-levels\",\"eventId\":\"78d42040-0149-4e03-8b42-a6fc07bbb5e0\",\"eventType\":\"StockReserved\",\"eventVersion\":1,\"aggregateType\":\"inventory-item\",\"aggregateId\":\"MUG\",\"sequence\":4}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"6be124bd-f73b-4876-8e73-4976a293eecf\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"64ca30dc-b403-4f74-b6ae-b32367ad5c4e\",\"eventType\":\"OrderStockReserved\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m2\",\"sequence\":4}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"10bc7874-a23a-4ec8-a071-5e58a1530ecd\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"64ca30dc-b403-4f74-b6ae-b32367ad5c4e\",\"eventType\":\"OrderStockReserved\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m2\",\"sequence\":4}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"38d839f1-ce78-48d8-bac2-51403250c806\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"64ca30dc-b403-4f74-b6ae-b32367ad5c4e\",\"eventType\":\"OrderStockReserved\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m2\",\"sequence\":4}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"f6259d90-69b7-4f56-9b67-3e2e35f7125d\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"64ca30dc-b403-4f74-b6ae-b32367ad5c4e\",\"eventType\":\"OrderStockReserved\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m2\",\"sequence\":4}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"3bbd214a-031f-4424-973f-6cd80ebd041e\",\"attempt\":1,\"subscriber\":\"stock-levels\",\"eventId\":\"2974257b-a8ae-457f-b227-c2f93cff3318\",\"eventType\":\"StockReservationRejected\",\"eventVersion\":1,\"aggregateType\":\"inventory-item\",\"aggregateId\":\"CUP\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"0029e466-260e-48bb-bd2d-91cf0a34b598\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"11a2ee56-dd3d-4e01-9e38-98a741829fe4\",\"eventType\":\"OrderCancelled\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"c1\",\"sequence\":4}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"ad0ffbee-b4b2-426f-ac1c-bf588680f9a6\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"11a2ee56-dd3d-4e01-9e38-98a741829fe4\",\"eventType\":\"OrderCancelled\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"c1\",\"sequence\":4}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"1dd314cb-53fd-4250-8f7a-2398819a59dd\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"11a2ee56-dd3d-4e01-9e38-98a741829fe4\",\"eventType\":\"OrderCancelled\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"c1\",\"sequence\":4}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"8c4a3859-647f-4643-8990-e742e6654749\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"0440d602-f176-4cbd-807c-ad64a66c424d\",\"eventType\":\"OrderPlaced\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"c1\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"35d67a2a-ee89-4b41-b749-7d43a69b75fb\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"11a2ee56-dd3d-4e01-9e38-98a741829fe4\",\"eventType\":\"OrderCancelled\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"c1\",\"sequence\":4}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"535a2611-3ad0-4ca1-b3b4-eabc28fe3fa4\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"660c6a56-688d-464f-ba22-28661b848d00\",\"eventType\":\"OrderCreated\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p1\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"02b49902-93a8-47d5-baa5-ff4401397ddd\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"660c6a56-688d-464f-ba22-28661b848d00\",\"eventType\":\"OrderCreated\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p1\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"d3616aa6-b15b-4d66-a77c-4b20c0210452\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"660c6a56-688d-464f-ba22-28661b848d00\",\"eventType\":\"OrderCreated\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p1\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"017373b7-1240-4a09-ae59-9bd80a8eb2d9\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"660c6a56-688d-464f-ba22-28661b848d00\",\"eventType\":\"OrderCreated\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p1\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"a58ede64-999a-416c-8560-880342c49758\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"025f1c08-ef1d-41c4-9d9b-e188c6cf016c\",\"eventType\":\"OrderLineAdded\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p1\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"0cc549cb-6323-41a0-9df2-68ab46e0b40d\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"025f1c08-ef1d-41c4-9d9b-e188c6cf016c\",\"eventType\":\"OrderLineAdded\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p1\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"68776109-4856-4126-a123-3289ddb05f63\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"025f1c08-ef1d-41c4-9d9b-e188c6cf016c\",\"eventType\":\"OrderLineAdded\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p1\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"7a67ba4b-e0bc-46d1-b86c-28bd2465a93d\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"025f1c08-ef1d-41c4-9d9b-e188c6cf016c\",\"eventType\":\"OrderLineAdded\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p1\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"b3efcc47-d31b-4f55-a09b-4ed8a2348a6e\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"847c7aa2-aa5b-4218-8475-8c7364d01cef\",\"eventType\":\"OrderPlaced\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p1\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"717f89d2-36af-4e98-923d-8ae9fa21348e\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"847c7aa2-aa5b-4218-8475-8c7364d01cef\",\"eventType\":\"OrderPlaced\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p1\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"4e210b61-c1df-49d1-b8c9-46b96b64737e\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"847c7aa2-aa5b-4218-8475-8c7364d01cef\",\"eventType\":\"OrderPlaced\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p1\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"8d801ec5-94e5-4a86-af3c-e37b27d85e2d\",\"attempt\":1,\"subscriber\":\"stock-levels\",\"eventId\":\"d2eaea71-01ee-46bc-be0e-b276c702cdde\",\"eventType\":\"StockReserved\",\"eventVersion\":1,\"aggregateType\":\"inventory-item\",\"aggregateId\":\"MUG\",\"sequence\":5}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"08607e23-94d7-4c0f-b408-f2c6b00cac1e\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"a87e11ee-d559-461e-9e31-5646296b2d2c\",\"eventType\":\"OrderStockReserved\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p1\",\"sequence\":4}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"2f0dc4cd-523a-4a70-b8e9-f92a1613ba61\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"a87e11ee-d559-461e-9e31-5646296b2d2c\",\"eventType\":\"OrderStockReserved\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p1\",\"sequence\":4}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"343027cd-1392-41be-93c1-32077d1b4cab\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"847c7aa2-aa5b-4218-8475-8c7364d01cef\",\"eventType\":\"OrderPlaced\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p1\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"14c5155f-a687-48e9-b8f5-512dff08f60b\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"a87e11ee-d559-461e-9e31-5646296b2d2c\",\"eventType\":\"OrderStockReserved\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p1\",\"sequence\":4}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"7acca371-ea69-40c6-bf6c-5e896e7377e1\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"a87e11ee-d559-461e-9e31-5646296b2d2c\",\"eventType\":\"OrderStockReserved\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p1\",\"sequence\":4}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"a22c4e4b-1c76-4816-97d1-fe5523c7334d\",\"attempt\":1,\"subscriber\":\"daily-revenue\",\"eventId\":\"d9dad82a-596c-404b-90df-53bff768a363\",\"eventType\":\"PaymentCaptured\",\"eventVersion\":1,\"aggregateType\":\"payment\",\"aggregateId\":\"pay-p1\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"57c16a32-ef23-4542-bddb-e0d2be991cb4\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"ef09d849-dc8b-464c-bf67-fa3070fc6b24\",\"eventType\":\"OrderPaid\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p1\",\"sequence\":5}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"dfb90ea9-2d50-409f-8404-3a47ab390fd6\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"ef09d849-dc8b-464c-bf67-fa3070fc6b24\",\"eventType\":\"OrderPaid\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p1\",\"sequence\":5}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"e81ba3bf-338b-4c19-8139-cdd6aa84681a\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"ef09d849-dc8b-464c-bf67-fa3070fc6b24\",\"eventType\":\"OrderPaid\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p1\",\"sequence\":5}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"95aa2e1f-2508-4cd6-883e-4b06ad76858f\",\"attempt\":1,\"subscriber\":\"stock-levels\",\"eventId\":\"53a8381c-51c4-4e98-96dc-57d30c0515c8\",\"eventType\":\"StockReservationConfirmed\",\"eventVersion\":1,\"aggregateType\":\"inventory-item\",\"aggregateId\":\"MUG\",\"sequence\":6}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"50ff53d2-af6b-468e-ae2e-8d9362ac9232\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"d9dad82a-596c-404b-90df-53bff768a363\",\"eventType\":\"PaymentCaptured\",\"eventVersion\":1,\"aggregateType\":\"payment\",\"aggregateId\":\"pay-p1\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:05:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"465d8f37-769b-45ad-acd9-a9a48c44b92d\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"ef09d849-dc8b-464c-bf67-fa3070fc6b24\",\"eventType\":\"OrderPaid\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p1\",\"sequence\":5}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"order.reservation_expired\",\"component\":\"reservation-expiry\",\"orderId\":\"m1\",\"expiresAt\":\"2026-06-01T09:15:00.000Z\"}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"order.reservation_expired\",\"component\":\"reservation-expiry\",\"orderId\":\"m2\",\"expiresAt\":\"2026-06-01T09:15:00.000Z\"}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"86128587-1e4a-4692-944c-6c27deee0329\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"24ff2e16-5c12-4427-b77f-378001c5e4e4\",\"eventType\":\"OrderCancelled\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m1\",\"sequence\":5}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"f660cd51-fa7e-400b-8ce7-a5a3d44a05a2\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"24ff2e16-5c12-4427-b77f-378001c5e4e4\",\"eventType\":\"OrderCancelled\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m1\",\"sequence\":5}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"bd98cbb4-9988-4b1b-9877-25d34b67c742\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"24ff2e16-5c12-4427-b77f-378001c5e4e4\",\"eventType\":\"OrderCancelled\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m1\",\"sequence\":5}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"fc68f22f-55e2-42e7-9c7b-5df2773506f4\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"2d1a6288-121c-4c6a-b1dd-6e219e1a9155\",\"eventType\":\"OrderCancelled\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m2\",\"sequence\":5}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"e6c077ed-90fb-421c-a0fe-d2b3e2412276\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"2d1a6288-121c-4c6a-b1dd-6e219e1a9155\",\"eventType\":\"OrderCancelled\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m2\",\"sequence\":5}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"37340026-8158-4f59-a3b4-faf274392f76\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"2d1a6288-121c-4c6a-b1dd-6e219e1a9155\",\"eventType\":\"OrderCancelled\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m2\",\"sequence\":5}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"2a752486-1cb0-4aec-a804-c0fc238010ed\",\"attempt\":1,\"subscriber\":\"stock-levels\",\"eventId\":\"74af8a7f-29db-4ccb-9445-aab6f3bf6bb7\",\"eventType\":\"StockReservationReleased\",\"eventVersion\":1,\"aggregateType\":\"inventory-item\",\"aggregateId\":\"MUG\",\"sequence\":7}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"80bdf9d1-7753-475c-a1ab-8ee31c2d7c06\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"24ff2e16-5c12-4427-b77f-378001c5e4e4\",\"eventType\":\"OrderCancelled\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m1\",\"sequence\":5}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"0b4192ae-7bbf-4a81-a80c-cbfa1887d11e\",\"attempt\":1,\"subscriber\":\"stock-levels\",\"eventId\":\"053e9a3e-b665-4134-b992-5b0341b8e0a0\",\"eventType\":\"StockReservationReleased\",\"eventVersion\":1,\"aggregateType\":\"inventory-item\",\"aggregateId\":\"MUG\",\"sequence\":8}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"8ea48fa3-0b7a-4d77-873f-26772c393e5c\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"2d1a6288-121c-4c6a-b1dd-6e219e1a9155\",\"eventType\":\"OrderCancelled\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m2\",\"sequence\":5}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"3b2edbe6-0026-4d2f-9941-4f8582498147\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"faa6c5ec-02de-449f-ab39-444ff70ef89e\",\"eventType\":\"OrderCreated\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m3\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"869730ff-92a0-4bdf-ace1-cd7e58d5e968\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"faa6c5ec-02de-449f-ab39-444ff70ef89e\",\"eventType\":\"OrderCreated\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m3\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"89fa575e-ce1f-4ce2-bd61-dd457b40ece6\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"faa6c5ec-02de-449f-ab39-444ff70ef89e\",\"eventType\":\"OrderCreated\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m3\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"cd128f75-faec-4e73-a1dd-af61383c5a53\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"faa6c5ec-02de-449f-ab39-444ff70ef89e\",\"eventType\":\"OrderCreated\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m3\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"ae4749c7-96e6-421b-ae1e-370ad71b1785\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"b451ff42-07c0-4eee-941c-fd26997849a0\",\"eventType\":\"OrderLineAdded\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m3\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"ede70b0a-7b79-43a8-b262-fc0e05e59acf\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"b451ff42-07c0-4eee-941c-fd26997849a0\",\"eventType\":\"OrderLineAdded\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m3\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"1028ba64-28fc-45ea-a3b7-a4efba76bfaf\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"b451ff42-07c0-4eee-941c-fd26997849a0\",\"eventType\":\"OrderLineAdded\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m3\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"44054c7d-3d69-4636-ad98-42a4ac5ec1be\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"b451ff42-07c0-4eee-941c-fd26997849a0\",\"eventType\":\"OrderLineAdded\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m3\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"ea56c24c-2c1e-4dff-bbc9-2974b9cce14a\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"f2d38727-716d-489e-9891-07f906318d80\",\"eventType\":\"OrderPlaced\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m3\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"5fe2b4d6-fd1d-485c-9e41-8bddc8b7ed8b\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"f2d38727-716d-489e-9891-07f906318d80\",\"eventType\":\"OrderPlaced\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m3\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"fbfb8bc5-d6c4-43d5-ab4a-13b8b6267669\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"f2d38727-716d-489e-9891-07f906318d80\",\"eventType\":\"OrderPlaced\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m3\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"52f9526b-a2ea-44d8-b88f-4ca2d27248ee\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"b587d2f6-d46a-4b9d-901c-dd9ebd2fca22\",\"eventType\":\"OrderCancelled\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m3\",\"sequence\":4}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"3b5874b2-fc4d-4db6-97c4-ac551d102a4b\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"b587d2f6-d46a-4b9d-901c-dd9ebd2fca22\",\"eventType\":\"OrderCancelled\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m3\",\"sequence\":4}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"8ff95b38-d6de-4620-9a98-f5ea0b47454c\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"f2d38727-716d-489e-9891-07f906318d80\",\"eventType\":\"OrderPlaced\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m3\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"ce6b2040-eac0-4efa-bb3e-7a69dc1471c8\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"b587d2f6-d46a-4b9d-901c-dd9ebd2fca22\",\"eventType\":\"OrderCancelled\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m3\",\"sequence\":4}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"7e23966f-975e-4a1f-bbb8-88d5ad49e483\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"eab749e5-b4f8-480a-b596-19756fd4a48b\",\"eventType\":\"OrderCreated\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m4\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"c1b46aa9-3167-467a-88c3-1fafa5d05d84\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"eab749e5-b4f8-480a-b596-19756fd4a48b\",\"eventType\":\"OrderCreated\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m4\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"6a090897-6fd4-4c60-9564-d90145759a07\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"eab749e5-b4f8-480a-b596-19756fd4a48b\",\"eventType\":\"OrderCreated\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m4\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"d09e89c9-9702-4d5c-b219-49ac34182de3\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"eab749e5-b4f8-480a-b596-19756fd4a48b\",\"eventType\":\"OrderCreated\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m4\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"ca684199-979e-43fb-9e19-711f494c4588\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"236272d7-f088-4653-a263-aeec4ed758dd\",\"eventType\":\"OrderLineAdded\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m4\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"86d8e200-e220-4ea3-987c-7c32b4f8f838\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"236272d7-f088-4653-a263-aeec4ed758dd\",\"eventType\":\"OrderLineAdded\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m4\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"3c9ebd06-a42f-4c8d-9d26-ad702bbb7cef\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"236272d7-f088-4653-a263-aeec4ed758dd\",\"eventType\":\"OrderLineAdded\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m4\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"7757fbc1-541f-4773-bfa7-d7f9893f6197\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"236272d7-f088-4653-a263-aeec4ed758dd\",\"eventType\":\"OrderLineAdded\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m4\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"801ee729-226d-4209-aaca-3c8dc92026ba\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"b587d2f6-d46a-4b9d-901c-dd9ebd2fca22\",\"eventType\":\"OrderCancelled\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m3\",\"sequence\":4}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"4a35371d-7c94-4de4-8d5f-141ddd7807c7\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"3e42003a-58b5-4be7-9d07-8d89ac856830\",\"eventType\":\"OrderPlaced\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m4\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"d362bdcc-792e-4715-9314-d2c557a10c64\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"3e42003a-58b5-4be7-9d07-8d89ac856830\",\"eventType\":\"OrderPlaced\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m4\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"1909f247-8ac7-4803-b29c-960c49556959\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"3e42003a-58b5-4be7-9d07-8d89ac856830\",\"eventType\":\"OrderPlaced\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m4\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"78efe2f7-ddd0-410d-8289-97db8508cf99\",\"attempt\":1,\"subscriber\":\"stock-levels\",\"eventId\":\"9e9a710b-07ff-42fb-8a2b-49a9154611d4\",\"eventType\":\"StockReserved\",\"eventVersion\":1,\"aggregateType\":\"inventory-item\",\"aggregateId\":\"MUG\",\"sequence\":9}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"7c0e5f1e-1f52-4c3a-8577-abfe13cf1093\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"3e42003a-58b5-4be7-9d07-8d89ac856830\",\"eventType\":\"OrderPlaced\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m4\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"32eccbb5-2ec4-4a50-91ae-2f388087a32e\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"f9217fe9-b3cb-4dea-adc9-8d48fa8298bd\",\"eventType\":\"OrderStockReserved\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m4\",\"sequence\":4}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"79166061-a4f3-413c-9719-28a037e91c10\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"f9217fe9-b3cb-4dea-adc9-8d48fa8298bd\",\"eventType\":\"OrderStockReserved\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m4\",\"sequence\":4}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"4ca5ec9b-5c5a-4e86-a934-8bdc30f85e4c\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"f9217fe9-b3cb-4dea-adc9-8d48fa8298bd\",\"eventType\":\"OrderStockReserved\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m4\",\"sequence\":4}",
+    "{\"ts\":\"2026-06-01T09:15:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"67c797f2-705f-48fe-a987-9db44457edc2\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"f9217fe9-b3cb-4dea-adc9-8d48fa8298bd\",\"eventType\":\"OrderStockReserved\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m4\",\"sequence\":4}",
+    "{\"ts\":\"2026-06-01T09:22:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"b69fd5ae-0d23-4d37-b20a-aa87166cb34b\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"17c6ec01-3fe6-48d3-a2f3-40b585c41b33\",\"eventType\":\"OrderCreated\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p2\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:22:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"3e9d9f6c-8c96-46de-9be5-9a8abb55051b\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"17c6ec01-3fe6-48d3-a2f3-40b585c41b33\",\"eventType\":\"OrderCreated\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p2\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:22:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"ad0f2e5b-01cc-456a-ad8b-0c2315dde870\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"17c6ec01-3fe6-48d3-a2f3-40b585c41b33\",\"eventType\":\"OrderCreated\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p2\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:22:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"2b830584-c25c-44ee-9597-321b00f5ebf2\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"17c6ec01-3fe6-48d3-a2f3-40b585c41b33\",\"eventType\":\"OrderCreated\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p2\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:22:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"54d97d1f-8d97-4074-a30b-93f4bca547ea\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"fd863248-c577-4ba4-ba34-c56288666b86\",\"eventType\":\"OrderLineAdded\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p2\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:22:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"843d105d-5e57-4391-b042-8f53de23a7ef\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"fd863248-c577-4ba4-ba34-c56288666b86\",\"eventType\":\"OrderLineAdded\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p2\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:22:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"c17d8b4b-a399-4e00-a877-b09fee104805\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"fd863248-c577-4ba4-ba34-c56288666b86\",\"eventType\":\"OrderLineAdded\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p2\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:22:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"f46f3d5a-b381-4437-9d55-c2df1b49fbc7\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"fd863248-c577-4ba4-ba34-c56288666b86\",\"eventType\":\"OrderLineAdded\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p2\",\"sequence\":2}",
+    "{\"ts\":\"2026-06-01T09:22:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"2896d9fe-580d-4862-b5f6-e6e87e52a695\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"2e4d5632-157b-4682-9a09-7a8c2a5748bf\",\"eventType\":\"OrderPlaced\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p2\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:22:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"97c53182-f3d0-457b-900d-9d9034be68f3\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"2e4d5632-157b-4682-9a09-7a8c2a5748bf\",\"eventType\":\"OrderPlaced\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p2\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:22:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"cfed51af-9827-4934-a067-776b2aa7d3b2\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"2e4d5632-157b-4682-9a09-7a8c2a5748bf\",\"eventType\":\"OrderPlaced\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p2\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:22:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"4c98d7ed-0454-4c13-90d6-509cc9e8f291\",\"attempt\":1,\"subscriber\":\"stock-levels\",\"eventId\":\"aff70ab6-e1d8-42aa-9c6f-0a02a3ef5a64\",\"eventType\":\"StockReserved\",\"eventVersion\":1,\"aggregateType\":\"inventory-item\",\"aggregateId\":\"MUG\",\"sequence\":10}",
+    "{\"ts\":\"2026-06-01T09:22:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"24d7845a-1f4a-444d-8273-ef956010af02\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"e966147c-0966-4b32-9b7d-55ce132273f0\",\"eventType\":\"OrderStockReserved\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p2\",\"sequence\":4}",
+    "{\"ts\":\"2026-06-01T09:22:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"85e99782-87dc-48f8-a4a1-59dc55194b0d\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"e966147c-0966-4b32-9b7d-55ce132273f0\",\"eventType\":\"OrderStockReserved\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p2\",\"sequence\":4}",
+    "{\"ts\":\"2026-06-01T09:22:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"00985bd9-7c43-4566-80db-ae73eaabfcea\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"2e4d5632-157b-4682-9a09-7a8c2a5748bf\",\"eventType\":\"OrderPlaced\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p2\",\"sequence\":3}",
+    "{\"ts\":\"2026-06-01T09:22:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"937ba633-e1c6-4fd4-af78-e2c94dc31a52\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"e966147c-0966-4b32-9b7d-55ce132273f0\",\"eventType\":\"OrderStockReserved\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p2\",\"sequence\":4}",
+    "{\"ts\":\"2026-06-01T09:22:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"dc4b7221-22e5-465e-8cfa-6714bc8ded4a\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"e966147c-0966-4b32-9b7d-55ce132273f0\",\"eventType\":\"OrderStockReserved\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p2\",\"sequence\":4}",
+    "{\"ts\":\"2026-06-01T09:22:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"bcd21217-9619-47aa-8f81-07a46cc5d1e7\",\"attempt\":1,\"subscriber\":\"daily-revenue\",\"eventId\":\"ec57af24-3585-4b77-9c2a-51a946d367f0\",\"eventType\":\"PaymentCaptured\",\"eventVersion\":1,\"aggregateType\":\"payment\",\"aggregateId\":\"pay-p2\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:22:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"d6758002-ec4b-457b-aee2-ea9b1e7b908d\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"512a2889-0f7b-475e-a867-1817ff6dbbed\",\"eventType\":\"OrderPaid\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p2\",\"sequence\":5}",
+    "{\"ts\":\"2026-06-01T09:22:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"c718ca70-52f6-454d-81fd-09630bf94a07\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"512a2889-0f7b-475e-a867-1817ff6dbbed\",\"eventType\":\"OrderPaid\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p2\",\"sequence\":5}",
+    "{\"ts\":\"2026-06-01T09:22:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"edfdc459-4734-444d-b4cd-bc44a06a2cab\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"512a2889-0f7b-475e-a867-1817ff6dbbed\",\"eventType\":\"OrderPaid\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p2\",\"sequence\":5}",
+    "{\"ts\":\"2026-06-01T09:22:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"346721ea-1012-4ac7-ae2e-1a4a85d0b240\",\"attempt\":1,\"subscriber\":\"stock-levels\",\"eventId\":\"858fa671-fb26-4ddd-9b5c-d40db2318dc5\",\"eventType\":\"StockReservationConfirmed\",\"eventVersion\":1,\"aggregateType\":\"inventory-item\",\"aggregateId\":\"MUG\",\"sequence\":11}",
+    "{\"ts\":\"2026-06-01T09:22:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"22bc0c62-fbd0-4583-8081-7b74a539c137\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"ec57af24-3585-4b77-9c2a-51a946d367f0\",\"eventType\":\"PaymentCaptured\",\"eventVersion\":1,\"aggregateType\":\"payment\",\"aggregateId\":\"pay-p2\",\"sequence\":1}",
+    "{\"ts\":\"2026-06-01T09:22:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"dbf56c49-3e8d-402c-b2bd-675e0bda00f6\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"512a2889-0f7b-475e-a867-1817ff6dbbed\",\"eventType\":\"OrderPaid\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"p2\",\"sequence\":5}",
+    "{\"ts\":\"2026-06-01T09:30:00.000Z\",\"level\":\"info\",\"msg\":\"order.reservation_expired\",\"component\":\"reservation-expiry\",\"orderId\":\"m4\",\"expiresAt\":\"2026-06-01T09:30:00.000Z\"}",
+    "{\"ts\":\"2026-06-01T09:30:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"16d57e46-6f0c-43c3-938e-554ec6ce3cc1\",\"attempt\":1,\"subscriber\":\"order-summary\",\"eventId\":\"8c2c135a-1883-45d8-be2c-3abbd98aa4d4\",\"eventType\":\"OrderCancelled\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m4\",\"sequence\":5}",
+    "{\"ts\":\"2026-06-01T09:30:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":2,\"messageId\":\"f17bd490-c0a2-4b46-b543-c9ec1be96b81\",\"attempt\":1,\"subscriber\":\"customer-history\",\"eventId\":\"8c2c135a-1883-45d8-be2c-3abbd98aa4d4\",\"eventType\":\"OrderCancelled\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m4\",\"sequence\":5}",
+    "{\"ts\":\"2026-06-01T09:30:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":4,\"messageId\":\"eec84265-8620-48f7-a398-44340fbceb5f\",\"attempt\":1,\"subscriber\":\"order-payments\",\"eventId\":\"8c2c135a-1883-45d8-be2c-3abbd98aa4d4\",\"eventType\":\"OrderCancelled\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m4\",\"sequence\":5}",
+    "{\"ts\":\"2026-06-01T09:30:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":1,\"messageId\":\"48c0cf5b-ef4e-4ef7-b4f3-f17e54440a7f\",\"attempt\":1,\"subscriber\":\"stock-levels\",\"eventId\":\"053443d0-e892-4493-b330-8a76440ef334\",\"eventType\":\"StockReservationReleased\",\"eventVersion\":1,\"aggregateType\":\"inventory-item\",\"aggregateId\":\"MUG\",\"sequence\":12}",
+    "{\"ts\":\"2026-06-01T09:30:00.000Z\",\"level\":\"info\",\"msg\":\"message.handled\",\"component\":\"worker-pool\",\"worker\":3,\"messageId\":\"d52318f5-c9dd-4bcb-a786-bc56d9e12341\",\"attempt\":1,\"subscriber\":\"order-fulfillment\",\"eventId\":\"8c2c135a-1883-45d8-be2c-3abbd98aa4d4\",\"eventType\":\"OrderCancelled\",\"eventVersion\":1,\"aggregateType\":\"order\",\"aggregateId\":\"m4\",\"sequence\":5}"
+  ]
+}
