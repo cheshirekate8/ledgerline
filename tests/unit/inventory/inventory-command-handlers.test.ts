@@ -9,7 +9,9 @@ import { testDependencies } from '../../support/dependencies';
 function setup() {
   const infrastructure = testDependencies(INVENTORY_EVENT_TYPES);
   const repository = createInventoryRepository(infrastructure.dependencies);
-  const bus = new CommandBus<InventoryCommand>().registerAll(inventoryCommandHandlers(repository));
+  const bus = new CommandBus<InventoryCommand>({ clock: infrastructure.clock }).registerAll(
+    inventoryCommandHandlers(repository),
+  );
   let key = 0;
   const run = (command: Omit<InventoryCommand, 'idempotencyKey'>, idempotencyKey = `k-${(key += 1)}`) =>
     bus.execute({ ...command, idempotencyKey } as InventoryCommand);

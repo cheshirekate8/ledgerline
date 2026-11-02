@@ -13,7 +13,7 @@ import { testDependencies } from '../../support/dependencies';
 function setup(reservationTtlMs?: number) {
   const infrastructure = testDependencies(ORDER_EVENT_TYPES);
   const repository = createOrderRepository(infrastructure.dependencies);
-  const bus = new CommandBus<OrderCommand>().registerAll(
+  const bus = new CommandBus<OrderCommand>({ clock: infrastructure.clock }).registerAll(
     orderCommandHandlers({
       repository,
       catalog: testCatalog(),

@@ -213,3 +213,31 @@ persisting.
 
 Off by default, versioned by state schema, and never required for correctness: an
 aggregate loaded from a snapshot is identical to one replayed from scratch.
+
+### 6.4 Idempotency keys are remembered for a window
+
+A command's idempotency key is remembered for a configurable window after the command
+ran, **24 hours by default**, measured on the injected clock; the window can be set to
+forever. Within the window a repeated key behaves exactly as before (§2.4). After it, the
+key is forgotten: removed from memory, not rebuilt at start-up, and a command sent under
+it runs as a new command.
+
+- **The window is a promise to callers, not to the service's own reactions.** Clients
+  retry within seconds or minutes; 24 hours matches common payment-API practice. A
+  caller that retries later gets the command run as new: a refund or credit without an
+  explicit id refunds twice, `ReceiveStock` adds stock twice, a line without an explicit
+  id is added twice, and commands whose effect can only happen once (`CreateOrder`,
+  `PlaceOrder`, `CapturePayment`) fail with their business error instead of returning
+  `duplicate`. That is the stated cost.
+- **A key reused after its window belongs to its latest use**, including when keys are
+  rebuilt at start-up; its earlier use is past the window by definition.
+- **The service's own reactions must not depend on remembered keys.** Since §6.2,
+  recovery no longer re-sends finished work, but `republish()` still re-sends every
+  stored event, of any age. Every command a process manager sends must therefore be a
+  no-op when its effect has already happened, judged by the aggregate's own state rather
+  than by the key. A re-sent `PaymentCaptured` for an order that has since shipped must
+  not be mistaken for "the order cannot accept this payment" and refunded (§4.3).
+- *Rejected:* keeping the last N keys. Memory is predictable, but how long a key
+  survives then depends on traffic, so a caller cannot know its safe retry window.
+- *Rejected:* forever by default with an opt-in window. It leaves the store unbounded for
+  anyone who does not configure it, which is the problem this section exists to fix.

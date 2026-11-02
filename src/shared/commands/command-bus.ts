@@ -1,4 +1,6 @@
+import { Clock, SystemClock } from '../clock';
 import { ConcurrencyError, DomainError } from '../errors';
+import { StoredEvent } from '../events/domain-event';
 import { fingerprint } from '../stable-json';
 import { Command, CommandDispatcher, CommandHandler, CommandResult, HandlerMap } from './command';
 import { IdempotencyRecord, IdempotencyStore, InMemoryIdempotencyStore } from './idempotency-store';
@@ -20,6 +22,8 @@ export class UnknownCommandError extends Error {
 
 export interface CommandBusOptions {
   idempotency?: IdempotencyStore;
+  /** Dates a record whose command raised no events; defaults to the system clock. */
+  clock?: Clock;
   /** How many times to reload and retry a command that lost an optimistic concurrency race. */
   maxConflictRetries?: number;
 }
@@ -31,15 +35,21 @@ export interface CommandBusOptions {
  * and shares the first one's outcome. Only successful executions are
  * recorded, so a command rejected by a business rule may be retried later
  * under the same key.
+ *
+ * A record is kept only for the store's window after its command ran (§6.4):
+ * every execution that gets as far as checking its key first drops the keys
+ * whose window has passed, so a key sent after its window runs as new.
  */
 export class CommandBus<C extends Command = Command> implements CommandDispatcher<C> {
   private readonly handlers = new Map<string, CommandHandler<C>>();
   private readonly idempotency: IdempotencyStore;
+  private readonly clock: Clock;
   private readonly maxConflictRetries: number;
   private readonly inFlight = new Map<string, { fingerprint: string; result: Promise<CommandResult> }>();
 
   constructor(options: CommandBusOptions = {}) {
-    this.idempotency = options.idempotency ?? new InMemoryIdempotencyStore();
+    this.clock = options.clock ?? new SystemClock();
+    this.idempotency = options.idempotency ?? new InMemoryIdempotencyStore({ clock: this.clock });
     this.maxConflictRetries = options.maxConflictRetries ?? 3;
   }
 
@@ -85,6 +95,7 @@ export class CommandBus<C extends Command = Command> implements CommandDispatche
   }
 
   private async run(command: C, handler: CommandHandler<C>, commandFingerprint: string): Promise<CommandResult> {
+    this.idempotency.forgetExpired();
     for (let attempt = 0; ; attempt += 1) {
       const existing = this.idempotency.get(command.idempotencyKey);
       if (existing) {
@@ -108,6 +119,7 @@ export class CommandBus<C extends Command = Command> implements CommandDispatche
           aggregateId: outcome.aggregateId,
           version: outcome.version,
           eventIds: outcome.events.map((event) => event.eventId),
+          ranAt: ranAt(outcome.events, this.clock),
         };
         this.idempotency.put(record);
         return toResult(record, false);
@@ -119,6 +131,16 @@ export class CommandBus<C extends Command = Command> implements CommandDispatche
       }
     }
   }
+}
+
+/**
+ * When a command ran, which starts its key's window. The events it produced
+ * carry that moment, so a record rebuilt from them at start-up dates from
+ * exactly the same instant; a command that produced none is dated by the clock.
+ */
+function ranAt(events: readonly StoredEvent[], clock: Clock): number {
+  const first = events[0];
+  return first ? Date.parse(first.occurredAt) : clock.now();
 }
 
 function assertSameCommand(key: string, recorded: string, incoming: string): void {

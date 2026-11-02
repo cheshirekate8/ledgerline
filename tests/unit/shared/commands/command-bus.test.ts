@@ -14,7 +14,10 @@ import { Counter, CounterEvent, CounterState, counterUpcasters } from '../../../
 
 type Increment = Command<'Increment', { counterId: string; by: number }>;
 
+const WINDOW_MS = 60_000;
+
 function setup() {
+  const clock = new FixedClock(0);
   const store = new InMemoryEventStore();
   const repository = new AggregateRepository<CounterState, CounterEvent, Counter>({
     aggregateType: 'counter',
@@ -22,10 +25,10 @@ function setup() {
     store,
     upcasters: counterUpcasters(),
     ids: new SeededIdGenerator(2),
-    clock: new FixedClock(0),
+    clock,
   });
-  const idempotency = new InMemoryIdempotencyStore();
-  const bus = new CommandBus<Increment>({ idempotency });
+  const idempotency = new InMemoryIdempotencyStore({ clock, windowMs: WINDOW_MS });
+  const bus = new CommandBus<Increment>({ idempotency, clock });
   const handler = jest.fn(async (command: Increment, context: { metadata: object }) => {
     if (command.payload.by <= 0) {
       throw new ValidationError('must increment by a positive amount');
@@ -36,7 +39,7 @@ function setup() {
     return { aggregateId: counter.id, version: counter.version, events };
   });
   bus.register('Increment', handler);
-  return { store, repository, bus, handler, idempotency };
+  return { store, repository, bus, handler, idempotency, clock };
 }
 
 const increment = (key: string, by = 1, counterId = 'c-1'): Increment => ({
@@ -79,6 +82,58 @@ describe('CommandBus', () => {
     const { bus } = setup();
     await bus.execute(increment('k-1', 1));
     await expect(bus.execute(increment('k-1', 2))).rejects.toBeInstanceOf(IdempotencyConflictError);
+  });
+
+  it('runs a key again once its window has passed', async () => {
+    const { bus, handler, repository, clock } = setup();
+    await bus.execute(increment('k-1', 3));
+
+    clock.advance(WINDOW_MS - 1);
+    expect((await bus.execute(increment('k-1', 3))).duplicate).toBe(true);
+    expect(handler).toHaveBeenCalledTimes(1);
+
+    clock.advance(1);
+    expect((await bus.execute(increment('k-1', 3))).duplicate).toBe(false);
+    expect(handler).toHaveBeenCalledTimes(2);
+    expect(repository.load('c-1')!.total).toBe(6);
+  });
+
+  it('lets a key past its window carry a different command', async () => {
+    const { bus, clock } = setup();
+    await bus.execute(increment('k-1', 1));
+    clock.advance(WINDOW_MS);
+    await expect(bus.execute(increment('k-1', 2))).resolves.toMatchObject({ duplicate: false });
+  });
+
+  it('drops expired records on the next command that checks its key', async () => {
+    const { bus, idempotency, clock } = setup();
+    await bus.execute(increment('k-1'));
+    await bus.execute(increment('k-2'));
+    expect(idempotency.size).toBe(2);
+
+    // Still counted between expiry and the next command: forgetting is not lazy
+    // filtering, it happens when a command reaches its key check.
+    clock.advance(WINDOW_MS);
+    expect(idempotency.size).toBe(2);
+    await bus.execute(increment('k-3'));
+    expect(idempotency.size).toBe(1);
+  });
+
+  it('drops expired records even when the command is refused', async () => {
+    const { bus, idempotency, clock } = setup();
+    await bus.execute(increment('k-1'));
+    clock.advance(WINDOW_MS);
+    await expect(bus.execute(increment('k-bad', 0))).rejects.toBeInstanceOf(ValidationError);
+    expect(idempotency.size).toBe(0);
+  });
+
+  it('dates a record by the events it produced, not by the clock when it finished', async () => {
+    const { bus, idempotency, clock } = setup();
+    clock.advance(5_000);
+    await bus.execute(increment('k-1'));
+    // The counter's events are stamped by the same clock, so the window starts
+    // at the moment they occurred — which is what a restart rebuilds from.
+    expect(idempotency.get('k-1')!.ranAt).toBe(5_000);
   });
 
   it('does not record failures, so the same key can succeed later', async () => {

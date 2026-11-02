@@ -183,8 +183,17 @@ export class Order extends AggregateRoot<OrderState, OrderEvent> {
     }
   }
 
+  /**
+   * Records that a payment paid for this order. The payment the order already
+   * accepted is a no-op in every later status — Shipped, Delivered or
+   * Refunded — because the effect has happened: the order must judge that by
+   * its own state rather than by a remembered idempotency key, so a
+   * redelivered or republished `PaymentCaptured` of any age changes nothing
+   * (§6.4). Any other payment is still refused once the order is paid, so the
+   * payments process still compensates it (§4.3).
+   */
   markPaid(paymentId: string, amountCents: Cents, now: number): void {
-    if (this.state.status === 'Paid' && this.state.paymentId === paymentId) {
+    if (this.state.paymentId === paymentId) {
       return;
     }
     this.assertPayable(now);

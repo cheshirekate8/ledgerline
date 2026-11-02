@@ -98,6 +98,7 @@ const app = createLedgerline({
   workers: 4,
   retry: { maxAttempts: 5 },
   snapshots: { enabled: true, interval: 50 },        // default: disabled
+  idempotencyWindowMs: 86_400_000,                   // default: 24 hours
   clock: new FixedClock('2026-06-01T09:00:00Z'),     // default: system clock
   ids: new SeededIdGenerator(42),                    // default: random UUIDs
 });
@@ -202,6 +203,10 @@ line knows exactly what was paid for it.
 - If a payment is captured just before the window closes but the order expires
   before the payment is applied, the payment is refunded in full automatically.
   The same happens to a second payment for an order that is already paid.
+- Applying the payment an order **already accepted** does nothing, in Paid and
+  in every status after it (Shipped, Delivered, Refunded). So a `PaymentCaptured`
+  delivered or republished again, however long afterwards, is never mistaken for
+  a second payment and never triggers that automatic refund.
 
 ### Refunds
 
@@ -288,6 +293,33 @@ execution, and reusing a key for a different payload throws
 caused, so they are recognised again after a restart. A command that fails a
 business rule is not recorded, so it can be retried under the same key later.
 
+**Keys are remembered for a window.** A key is remembered for
+`idempotencyWindowMs` after its command ran — **24 hours** by default, measured
+on the injected clock, and settable to `Number.POSITIVE_INFINITY` to remember
+keys forever. Any other value (zero, negative, fractional, `NaN`, `-Infinity`,
+an unsafe integer, a non-number) makes `createLedgerline` throw a `RangeError`.
+A key's window starts at the `occurredAt` of the events its command produced, so
+a restart over a persistent store rebuilds it from exactly the same instant: the
+keys still inside their window are rebuilt and the rest are not.
+
+Within the window everything above holds. After it the key is **forgotten** —
+dropped from memory and not rebuilt at start-up — and a command sent under it
+runs as a new command, which for most commands is not what a late retry wants:
+
+- A refund or credit without an explicit `refundId` or `creditId` gives the
+  money back a second time, and `ReceiveStock` adds the stock again.
+- An `AddOrderLine` without an explicit `lineId` adds the line again.
+- Commands whose effect can only happen once — `CreateOrder`, `PlaceOrder`,
+  `CapturePayment` — fail with their own business error instead of returning
+  `duplicate: true`.
+
+Forgetting is removal, not filtering on read: keys past their window are dropped
+by the next `execute()` that reaches its key check, whatever that command's
+outcome. `app.idempotencyKeyCount()` reports how many keys are held, so the
+bound can be watched; a key that has just expired may still be counted until
+that next command. A key reused after its window belongs to its latest use, in
+memory and after a restart.
+
 **At-least-once messaging.** A queued message is removed only when its handler
 succeeds. A failure is retried after a backoff (fixed, or exponential with a
 cap). After `maxAttempts` deliveries the message moves to the dead-letter queue,
@@ -304,8 +336,12 @@ its aggregate for that subscriber.
 skip an event they have already applied and refuse one that skips ahead, with
 `OutOfOrderEventError`. A gap is retried and then dead-lettered rather than
 silently applied. Process managers derive the idempotency key of every command
-they send from the event that caused it. Delivering any event any number of
-times therefore changes state at most once.
+they send from the event that caused it, and — because keys are only remembered
+for a window — every one of those commands is in addition a no-op when its
+effect has already happened, judged by the aggregate's own state when the
+command is handled. Delivering any event any number of times, at any remove
+from the first delivery, therefore changes state at most once. The same holds
+when a client sends one of those commands directly.
 
 **Restart recovery.** The queue itself is in memory, but over a file-backed
 store (`persistence: { kind: 'json-file' }`) each named subscriber's **progress**
@@ -343,7 +379,9 @@ event this subscriber has not finished":
 
 `app.republish()` is unchanged: it sends every stored event to every subscriber
 again. Built-in subscribers ignore what they have already handled, so
-republishing at any time is safe.
+republishing at any time is safe — including long after the events' idempotency
+keys have been forgotten, because the commands those subscribers send decide on
+the aggregates' state rather than on a remembered key.
 
 ## Persistence, snapshots and event versions
 

@@ -33,6 +33,12 @@ export interface LedgerlineOptions {
   readonly visibilityTimeoutMs?: number;
   /** How long a placed order holds its stock unpaid. Defaults to 15 minutes. */
   readonly reservationTtlMs?: number;
+  /**
+   * How long an idempotency key is remembered after its command ran. A positive
+   * safe integer number of milliseconds, or `Number.POSITIVE_INFINITY` to
+   * remember keys forever; anything else is a `RangeError`. Defaults to 24 hours.
+   */
+  readonly idempotencyWindowMs?: number;
   /** Hook for declaring newer event versions and registering their upcasters. */
   readonly configureUpcasters?: (registry: UpcasterRegistry) => void;
 }

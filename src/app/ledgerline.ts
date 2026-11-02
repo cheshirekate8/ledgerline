@@ -18,7 +18,11 @@ import { RepositoryDependencies } from '../shared/aggregates/aggregate-repositor
 import { Clock, SystemClock } from '../shared/clock';
 import { CommandResult } from '../shared/commands/command';
 import { CommandBus } from '../shared/commands/command-bus';
-import { hydrateIdempotencyStore, InMemoryIdempotencyStore } from '../shared/commands/idempotency-store';
+import {
+  hydrateIdempotencyStore,
+  idempotencyWindowMs,
+  InMemoryIdempotencyStore,
+} from '../shared/commands/idempotency-store';
 import { EventStore } from '../shared/events/event-store';
 import { InMemoryEventStore } from '../shared/events/in-memory-event-store';
 import { JsonFileEventStore } from '../shared/events/json-file-event-store';
@@ -62,6 +66,13 @@ export interface Ledgerline {
   expireReservations(): Promise<string[]>;
   /** Discards every read model and rebuilds it from the event store. */
   rebuildReadModels(): void;
+  /**
+   * How many idempotency keys are remembered. Keys are kept for
+   * `idempotencyWindowMs` after their command ran and dropped by the next
+   * command that checks its key, so an expired key may still be counted until
+   * then (§6.4).
+   */
+  idempotencyKeyCount(): number;
   /** Subscribes an extra consumer to the event stream, alongside the built-in ones. */
   subscribe(subscriber: EventSubscriber): void;
   /**
@@ -82,6 +93,7 @@ export interface Ledgerline {
 }
 
 export function createLedgerline(options: LedgerlineOptions): Ledgerline {
+  const windowMs = idempotencyWindowMs(options.idempotencyWindowMs);
   const clock = options.clock ?? new SystemClock();
   const ids = options.ids ?? new RandomIdGenerator();
   const logger = options.logger ?? new JsonLogger({ clock });
@@ -103,9 +115,9 @@ export function createLedgerline(options: LedgerlineOptions): Ledgerline {
   const inventory = createInventoryRepository(dependencies);
   const payments = createPaymentRepository(dependencies);
 
-  const idempotency = new InMemoryIdempotencyStore();
+  const idempotency = new InMemoryIdempotencyStore({ clock, windowMs });
   hydrateIdempotencyStore(store, idempotency);
-  const bus = new CommandBus<LedgerlineCommand>({ idempotency })
+  const bus = new CommandBus<LedgerlineCommand>({ idempotency, clock })
     .registerAll(
       orderCommandHandlers({
         repository: orders,
@@ -164,6 +176,7 @@ export function createLedgerline(options: LedgerlineOptions): Ledgerline {
     processMessages: () => pool.drain(),
     expireReservations: () => expiry.expireDue(),
     rebuildReadModels: () => hosts.forEach((host) => host.rebuild(store)),
+    idempotencyKeyCount: () => idempotency.size,
     subscribe: (subscriber) => {
       dispatcher.register(subscriber);
     },

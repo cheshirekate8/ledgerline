@@ -111,14 +111,24 @@ describe('the JSON file event store', () => {
 
   it('restores read models and idempotency after a restart', async () => {
     const path = join(directory, 'events.ndjson');
-    const before = createTestApp({ persistence: { kind: 'json-file', path, durable: false } });
+    // The store scenario moves the clock a day on, past the default idempotency
+    // window, and this test re-sends a key from before that; a forever window
+    // keeps the question "are keys rebuilt at all?" separate from the window
+    // itself, which tests/integration/idempotency-window covers (§6.4).
+    const forever = { idempotencyWindowMs: Number.POSITIVE_INFINITY } as const;
+    const before = createTestApp({ persistence: { kind: 'json-file', path, durable: false }, ...forever });
     await runStoreScenario(before);
     const state = readModelState(before.app);
     before.app.close();
     const eventCount = readFileSync(path, 'utf8').trimEnd().split('\n').length;
     expect(eventCount).toBe(before.app.store.readAll().length);
 
-    const after = createTestApp({ persistence: { kind: 'json-file', path }, clock: before.clock, seed: 99 });
+    const after = createTestApp({
+      persistence: { kind: 'json-file', path },
+      clock: before.clock,
+      seed: 99,
+      ...forever,
+    });
     expect(readModelState(after.app)).toEqual(state);
 
     after.app.republish();

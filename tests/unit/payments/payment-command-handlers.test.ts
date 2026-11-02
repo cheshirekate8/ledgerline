@@ -21,7 +21,9 @@ function setup() {
       return { orderId, customerId: 'c-1', totalCents: cents(7_737) };
     },
   };
-  const bus = new CommandBus<PaymentCommand>().registerAll(paymentCommandHandlers(repository, orders));
+  const bus = new CommandBus<PaymentCommand>({ clock: infrastructure.clock }).registerAll(
+    paymentCommandHandlers(repository, orders),
+  );
   return { ...infrastructure, repository, bus };
 }
 

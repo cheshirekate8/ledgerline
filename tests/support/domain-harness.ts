@@ -27,7 +27,7 @@ export function domainHarness() {
   const orders = createOrderRepository(dependencies);
   const inventory = createInventoryRepository(dependencies);
   const payments = createPaymentRepository(dependencies);
-  const bus = new CommandBus<AnyCommand>()
+  const bus = new CommandBus<AnyCommand>({ clock })
     .registerAll(orderCommandHandlers({ repository: orders, catalog: testCatalog(), clock, ids }))
     .registerAll(inventoryCommandHandlers(inventory))
     .registerAll(paymentCommandHandlers(payments, createPayableOrderLookup(orders, clock)));
